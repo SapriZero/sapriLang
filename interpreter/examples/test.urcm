@@ -1,0 +1,13 @@
+# Test URCM - Calcolo comfort
+# Costanti locali
+
+temperatura_base t_base = 30
+umidita_base u_base = 40
+
+# Input (minuscole = statici)
+temperatura t = 25
+umidita u = 30
+
+# Variabili reattive (maiuscole = si aggiornano)
+Comfort C = t * u / t_base * u_base
+Sensazione S = C * 1.1

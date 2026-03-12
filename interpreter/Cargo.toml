@@ -1,0 +1,25 @@
+[package]
+name = "urcm-interpreter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nom = "7.1.3"
+notify = "5.0.0" # per hot-reload
+regex = "1.10" # per parsing
+lazy_static = "1.4" # costanti
+anyhow = "1.0" # error handling
+
+urcm-core = { path = "../core" }
+
+#[lib]
+#name = "urcm"
+#path = "src/lib.rs"
+
+#[[bin]]
+#name = "urcmi"
+#path = "src/main.rs"
+
+
+
+

@@ -1,0 +1,22 @@
+[package]
+name = "urcm-editor-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+urcm-core = { path = "../core", features = ["web"] }
+axum = { version = "0.7", features = ["ws", "tokio"] }  # aggiungi features
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+tokio-tungstenite = "0.20"
+futures-util = "0.3"
+chrono = "0.4"
+notify = "6.1"
+tracing = "0.1"                    
+tracing-subscriber = "0.3" 
+
+[[bin]]
+name = "urcm-editor-server"
+path = "src/main.rs"

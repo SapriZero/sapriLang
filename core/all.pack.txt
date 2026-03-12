@@ -1,0 +1,495 @@
+--$FILE===: src/web/mod.rs
+//! Web server module for URCM
+//! Fornisce un server HTTP configurabile via Rust o DSL
+
+pub mod server;
+pub mod router;
+pub mod middleware;
+pub mod controller;
+pub mod dto;
+
+pub use server::{WebServer, ServerConfig};
+pub use router::{Route, Method, RouterBuilder};
+pub use middleware::{Middleware, ValidationResult};
+pub use dto::{Dto, Validatable};
+
+--$FILE===: src/web/server.rs
+//! Server HTTP principale
+
+use crate::web::router::{Route, RouterBuilder};
+use axum::{Router, Server};
+use std::net::SocketAddr;
+use std::sync::Arc;
+
+#[derive(Debug, Clone)]
+pub struct ServerConfig {
+    pub host: String,
+    pub port: u16,
+    pub workers: Option<usize>,
+    pub backlog: Option<u32>,
+}
+
+impl Default for ServerConfig {
+    fn default() -> Self {
+        Self {
+            host: "127.0.0.1".to_string(),
+            port: 8080,
+            workers: None,
+            backlog: None,
+        }
+    }
+}
+
+pub struct WebServer {
+    config: ServerConfig,
+    router: Router,
+    routes: Vec<Route>,
+}
+
+impl WebServer {
+    pub fn new(config: ServerConfig) -> Self {
+        Self {
+            config,
+            router: Router::new(),
+            routes: Vec::new(),
+        }
+    }
+    
+    pub fn with_port(port: u16) -> Self {
+        Self::new(ServerConfig {
+            port,
+            ..Default::default()
+        })
+    }
+    
+    pub fn route(mut self, route: Route) -> Self {
+        self.routes.push(route);
+        self
+    }
+    
+    pub fn routes(mut self, routes: Vec<Route>) -> Self {
+        self.routes.extend(routes);
+        self
+    }
+    
+    pub fn build_router(self) -> Router {
+        let mut builder = RouterBuilder::new(self.router);
+        for route in self.routes {
+            builder = builder.add_route(route);
+        }
+        builder.build()
+    }
+    
+    pub async fn start(self) -> Result<(), Box<dyn std::error::Error>> {
+        let router = self.build_router();
+        let addr = format!("{}:{}", self.config.host, self.config.port)
+            .parse::<SocketAddr>()?;
+        
+        println!("🚀 Server in ascolto su http://{}", addr);
+        
+        Server::bind(&addr)
+            .serve(router.into_make_service())
+            .await?;
+            
+        Ok(())
+    }
+}
+
+--$FILE===: src/web/router.rs
+//! Gestione rotte e builder
+
+use axum::{
+    Router,
+    routing::{get, post, put, delete},
+    response::IntoResponse,
+    extract::Request,
+};
+use std::collections::HashMap;
+use crate::web::middleware::{Middleware, ValidationResult};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Method {
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    PATCH,
+}
+
+impl Method {
+    fn as_str(&self) -> &'static str {
+        match self {
+            Method::GET => "GET",
+            Method::POST => "POST",
+            Method::PUT => "PUT",
+            Method::DELETE => "DELETE",
+            Method::PATCH => "PATCH",
+        }
+    }
+}
+
+pub struct Route {
+    pub path: String,
+    pub method: Method,
+    pub handler: Box<dyn Fn(Request) -> Result<impl IntoResponse, ValidationResult> + Send + Sync>,
+    pub middlewares: Vec<Box<dyn Middleware>>,
+}
+
+impl Route {
+    pub fn new<H, R>(path: impl Into<String>, method: Method, handler: H) -> Self
+    where
+        H: Fn(Request) -> Result<R, ValidationResult> + Send + Sync + 'static,
+        R: IntoResponse,
+    {
+        Self {
+            path: path.into(),
+            method,
+            handler: Box::new(move |req| handler(req).map(|r| r.into_response())),
+            middlewares: Vec::new(),
+        }
+    }
+    
+    pub fn with_middleware(mut self, mw: impl Middleware + 'static) -> Self {
+        self.middlewares.push(Box::new(mw));
+        self
+    }
+}
+
+pub struct RouterBuilder {
+    router: Router,
+    routes: Vec<Route>,
+}
+
+impl RouterBuilder {
+    pub fn new(router: Router) -> Self {
+        Self {
+            router,
+            routes: Vec::new(),
+        }
+    }
+    
+    pub fn add_route(mut self, route: Route) -> Self {
+        self.routes.push(route);
+        self
+    }
+    
+    pub fn build(self) -> Router {
+        let mut router = self.router;
+        
+        for route in self.routes {
+            let path = route.path.clone();
+            let handler = move |req| {
+                // Applica middleware in ordine
+                let mut req = req;
+                for mw in &route.middlewares {
+                    match mw.handle(req) {
+                        Ok(r) => req = r,
+                        Err(e) => return e.into_response(),
+                    }
+                }
+                (route.handler)(req).unwrap_or_else(|e| e.into_response())
+            };
+            
+            router = match route.method {
+                Method::GET => router.route(&path, get(handler)),
+                Method::POST => router.route(&path, post(handler)),
+                Method::PUT => router.route(&path, put(handler)),
+                Method::DELETE => router.route(&path, delete(handler)),
+                Method::PATCH => router.route(&path, delete(handler)),
+            };
+        }
+        
+        router
+    }
+}
+
+--$FILE===: src/web/middleware.rs
+//! Middleware per validazione, autenticazione, logging
+
+use axum::{
+    response::{IntoResponse, Response},
+    http::{Request, StatusCode},
+    Json,
+};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+pub type ValidationResult = Response;
+
+pub trait Middleware: Send + Sync {
+    fn handle(&self, req: Request) -> Result<Request, ValidationResult>;
+}
+
+// Middleware di logging
+pub struct Logger;
+
+impl Middleware for Logger {
+    fn handle(&self, req: Request) -> Result<Request, ValidationResult> {
+        println!("📝 {} {}", req.method(), req.uri());
+        Ok(req)
+    }
+}
+
+// Middleware di autenticazione con token
+pub struct Auth {
+    token: String,
+}
+
+impl Auth {
+    pub fn new(token: impl Into<String>) -> Self {
+        Self {
+            token: token.into(),
+        }
+    }
+}
+
+impl Middleware for Auth {
+    fn handle(&self, mut req: Request) -> Result<Request, ValidationResult> {
+        let headers = req.headers();
+        
+        if let Some(auth) = headers.get("Authorization") {
+            if let Ok(auth_str) = auth.to_str() {
+                if auth_str == format!("Bearer {}", self.token) {
+                    return Ok(req);
+                }
+            }
+        }
+        
+        Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ErrorResponse {
+                error: "Unauthorized".to_string(),
+                message: "Token non valido o mancante".to_string(),
+            }),
+        ).into_response())
+    }
+}
+
+// Middleware di validazione parametri
+pub struct ValidateParam<T> {
+    name: String,
+    validator: Arc<dyn Fn(&T) -> bool + Send + Sync>,
+}
+
+impl<T> ValidateParam<T> {
+    pub fn new(name: impl Into<String>, validator: impl Fn(&T) -> bool + Send + Sync + 'static) -> Self {
+        Self {
+            name: name.into(),
+            validator: Arc::new(validator),
+        }
+    }
+}
+
+impl<T> Middleware for ValidateParam<T>
+where
+    T: 'static + Send + Sync,
+{
+    fn handle(&self, req: Request) -> Result<Request, ValidationResult> {
+        // Qui andrebbe estratta la logica per ottenere il parametro
+        // Per ora passiamo sempre
+        Ok(req)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ErrorResponse {
+    pub error: String,
+    pub message: String,
+}
+
+--$FILE===: src/web/dto.rs
+//! Data Transfer Objects e validazione
+
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+pub trait Dto: Sized + Send + Sync {
+    fn validate(&self) -> Result<(), String>;
+}
+
+pub trait Validatable {
+    fn validate(&self) -> Result<(), String>;
+}
+
+// Esempio di DTO per creazione utente
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateUserDto {
+    pub username: String,
+    pub email: String,
+    pub age: Option<u8>,
+}
+
+impl Validatable for CreateUserDto {
+    fn validate(&self) -> Result<(), String> {
+        if self.username.len() < 3 {
+            return Err("Username troppo corto (min 3 caratteri)".to_string());
+        }
+        if !self.email.contains('@') {
+            return Err("Email non valida".to_string());
+        }
+        if let Some(age) = self.age {
+            if age < 18 {
+                return Err("Età minima 18 anni".to_string());
+            }
+        }
+        Ok(())
+    }
+}
+
+// DTO per risposta
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    pub id: i64,
+    pub username: String,
+    pub email: String,
+    pub created_at: chrono::DateTime<chrono::Utc>,
+}
+
+--$FILE===: src/web/controller.rs
+//! Controller (handlers) che chiamano i servizi
+
+use axum::{
+    extract::{Path, Query, State},
+    Json,
+    response::IntoResponse,
+    http::StatusCode,
+};
+use std::sync::Arc;
+use serde::Deserialize;
+use crate::web::dto::{CreateUserDto, UserResponse};
+
+// Esempio di stato condiviso
+pub struct AppState {
+    pub db: Arc<dyn crate::io::Connector + Send + Sync>,
+    pub urcm: crate::core::UrcmCtx<()>,
+}
+
+// Controller per GET /users/:id
+pub async fn get_user(
+    Path(id): Path<i32>,
+    State(state): State<Arc<AppState>>,
+) -> impl IntoResponse {
+    // Logica con URCM
+    // let comfort = state.urcm.get('C').unwrap_or(0.0);
+    
+    // TODO: chiamare servizio
+    (
+        StatusCode::OK,
+        Json(UserResponse {
+            id: id as i64,
+            username: format!("user_{}", id),
+            email: format!("user{}@example.com", id),
+            created_at: chrono::Utc::now(),
+        }),
+    )
+}
+
+// Controller per POST /users
+pub async fn create_user(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<CreateUserDto>,
+) -> impl IntoResponse {
+    // Valida il DTO
+    if let Err(e) = payload.validate() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": e })),
+        );
+    }
+    
+    // TODO: chiamare servizio per creare utente
+    
+    (
+        StatusCode::CREATED,
+        Json(serde_json::json!({ "id": 123, "username": payload.username })),
+    )
+}
+
+// Controller per GET /health
+pub async fn health_check() -> impl IntoResponse {
+    (
+        StatusCode::OK,
+        Json(serde_json::json!({ "status": "ok", "timestamp": chrono::Utc::now() })),
+    )
+}
+
+--$FILE===: examples/web_server.rs
+//! Esempio di utilizzo del web server
+
+use urcm_core::web::{
+    server::{WebServer, ServerConfig},
+    router::{Route, Method},
+    middleware::{Logger, Auth},
+    controller::{get_user, create_user, health_check},
+};
+use urcm_core::web::dto::CreateUserDto;
+use std::sync::Arc;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Configurazione server
+    let config = ServerConfig {
+        port: 3000,
+        ..Default::default()
+    };
+    
+    // Definisci rotte
+    let server = WebServer::new(config)
+        .route(
+            Route::new("/users/:id", Method::GET, get_user)
+                .with_middleware(Logger)
+                .with_middleware(Auth::new("secret-token"))
+        )
+        .route(
+            Route::new("/users", Method::POST, create_user)
+                .with_middleware(Logger)
+        )
+        .route(
+            Route::new("/health", Method::GET, health_check)
+                .with_middleware(Logger)
+        );
+    
+    // Avvia server
+    server.start().await?;
+    
+    Ok(())
+}
+
+--$FILE===: Cargo.toml (aggiungi dipendenze)
+[package]
+name = "urcm-core"
+version = "0.3.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+reqwest = { version = "0.11", features = ["blocking", "json"], optional = true }
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+chrono = "0.4"
+
+[features]
+default = ["http"]
+http = ["dep:reqwest"]
+
+[lib]
+name = "urcm_core"
+path = "src/lib.rs"
+
+--$FILE===: src/lib.rs (aggiornato)
+//! URCM Core Library
+
+pub mod core;
+pub mod fp;
+pub mod macros;
+pub mod io;
+pub mod crud;
+pub mod web;  // <-- nuovo modulo
+
+// Re-export principali
+pub use core::UrcmCtx;
+pub use core::atom::Atom;
+pub use core::atom_impl::{AtomImpl, PromiseState, ExternalSource};
+pub use fp::{eval, mask, Either};
+pub use crud::Crud;

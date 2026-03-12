@@ -1,0 +1,20 @@
+Esempio completo URCM
+
+φ = 1.618
+π = 3.14159
+Input sensori
+
+temperatura t = 22.5
+pressione p = 1013
+umidita u = 55
+Variabili reattive
+
+Comfort C = t * p / 1000 * u / 50
+Qualità Q = C * φ
+Ciclo di vita (esempio)
+
+if (Q > 20) {
+output "Qualità eccellente!"
+} else {
+output "Qualità normale"
+}

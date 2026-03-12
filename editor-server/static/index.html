@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URCM Editor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Toolbar in alto -->
+        <div id="toolbar-container"></div>
+
+        <div class="main-layout">
+            <!-- Sidebar sinistra (vuota per home) -->
+            <div id="sidebar-container" class="sidebar"></div>
+
+            <!-- Contenuto centrale -->
+            <div id="content-container" class="content-area">
+                <div class="welcome-screen">
+                    <h1>🚀 URCM Editor</h1>
+                    <p>Ambiente di sviluppo per il linguaggio SAPRI/URCM.</p>
+                    <p>Gestisci script, esegui codice e visualizza output in tempo reale.</p>
+                    <button onclick="window.location.href='/editor'" class="btn-primary">
+                        Apri Editor
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/components.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

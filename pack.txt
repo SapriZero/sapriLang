@@ -1,0 +1,42 @@
+#!/bin/bash
+# save as: urcm_splitter.sh
+
+BUNDLE_FILE="$1"
+CONFIRM="${2:-ask}"  # "ask" o "yes"
+
+if [ ! -f "$BUNDLE_FILE" ]; then
+    echo "File $BUNDLE_FILE non trovato"
+    exit 1
+fi
+
+# Estrai tutti i path unici per chiedere conferma
+if [ "$CONFIRM" = "ask" ]; then
+    echo "I seguenti file verranno creati/ sovrascritti:"
+    grep "^#PATH:" "$BUNDLE_FILE" | sed 's/#PATH: //'
+    echo ""
+    read -p "Continuare? (s/N): " response
+    if [[ ! "$response" =~ ^[Ss]$ ]]; then
+        echo "Annullato"
+        exit 0
+    fi
+fi
+
+# Variabile per tracciare il file corrente
+current_file=""
+output_file=""
+
+while IFS= read -r line; do
+    if [[ "$line" =~ ^#PATH:(.*)$ ]]; then
+        # Nuovo file inizia
+        current_file="${BASH_REMATCH[1]# }"  # rimuovi spazio iniziale
+        # Crea directory se non esiste
+        mkdir -p "$(dirname "$current_file")"
+        echo "Scrivo: $current_file"
+        > "$current_file"  # svuota file
+    elif [[ -n "$current_file" ]]; then
+        # Aggiungi linea al file corrente
+        echo "$line" >> "$current_file"
+    fi
+done < "$BUNDLE_FILE"
+
+echo "✅ Fatto!"

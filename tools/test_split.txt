@@ -1,0 +1,24 @@
+--$FILE===: test/src/main.rs
+fn main() {
+    println!("Ciao mondo!");
+    
+    let x = 10;
+    let y = 20;
+    let risultato = x + y;
+    
+    println!("Risultato: {}", risultato);
+}
+
+--$CHANGE===: test/src/main.rs
+--$LINESUB===:5,6
+    let a = 15;
+    let b = 25;
+
+--$LINEADD===:8
+    println!("Calcolo in corso...");
+
+--$LINEDEL===:10,11
+
+--$LINEADD===:12
+    println!("Fatto!");
+

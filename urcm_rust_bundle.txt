@@ -1,0 +1,21 @@
+#PATH: README.md
+# Motore Rust per URCM / SapriLanguage
+
+Questo progetto contiene due componenti:
+
+## /interpreter
+Motore principale che:
+- Legge file .urcm (DSL)
+- Compila in bytecode
+- Esegue con hot-reload su modifiche
+
+## /runtime
+Esempio di runtime embedded per integrare URCM in altre app
+
+## Compilazione
+```bash
+cd interpreter
+cargo run -- esempio.urcm
+
+cd ../runtime
+cargo run

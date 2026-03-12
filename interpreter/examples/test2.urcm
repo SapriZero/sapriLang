@@ -1,0 +1,5 @@
+# Test URCM
+temperatura t = 25
+umidita u = 60
+base b = 1000
+Comfort C = t * u / b

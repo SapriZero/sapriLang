@@ -1,0 +1,8 @@
+[package]
+name = "urcm-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+urcm-interpreter = { path = "../interpreter" }
+

@@ -1,0 +1,14 @@
+{
+  "name": "urcm-patch-tool",
+  "version": "1.0.0",
+  "description": "Tool per applicare patch ai file URCM",
+  "main": "patch.js",
+  "bin": {
+    "urcm-patch": "./patch.js"
+  },
+  "scripts": {
+    "patch": "node patch.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

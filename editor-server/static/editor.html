@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URCM Editor - Editor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Toolbar in alto -->
+        <div id="toolbar-container"></div>
+
+        <div class="main-layout">
+            <!-- Sidebar sinistra con file browser -->
+            <div id="sidebar-container" class="sidebar"></div>
+
+            <!-- Contenuto centrale con editor e console -->
+            <div id="content-container" class="content-area">
+                <div class="editor-toolbar">
+                    <button onclick="saveFile()">💾 Salva</button>
+                    <button onclick="executeFile()">▶ Esegui</button>
+                    <span id="current-file">nessun file selezionato</span>
+                </div>
+
+                <div class="editor-wrapper">
+                    <textarea id="editor"></textarea>
+                </div>
+
+                <div class="console" id="console"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="/static/js/components.js"></script>
+    <script src="/static/js/editor.js"></script>
+</body>
+</html>
