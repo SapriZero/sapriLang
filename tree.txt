@@ -1,0 +1,113 @@
+.
+├── ai
+├── core
+│   ├── examples
+│   │   ├── basic.rs
+│   │   ├── struct.rs
+│   │   └── web_server.rs
+│   ├── src
+│   │   ├── core
+│   │   │   ├── atom_impl.rs
+│   │   │   ├── atom.rs
+│   │   │   ├── context.rs
+│   │   │   ├── eval.rs
+│   │   │   ├── mod.rs
+│   │   │   └── reactive.rs
+│   │   ├── io
+│   │   │   ├── console.rs
+│   │   │   ├── file.rs
+│   │   │   ├── http.rs
+│   │   │   ├── memory.rs
+│   │   │   └── mod.rs
+│   │   ├── macros
+│   │   │   └── mod.rs
+│   │   ├── web
+│   │   │   ├── controller.rs
+│   │   │   ├── dto.rs
+│   │   │   ├── middleware.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── router.rs
+│   │   │   └── server.rs
+│   │   ├── crud.rs
+│   │   ├── fp.rs
+│   │   ├── lib.rs
+│   │   └── lib.rs (aggiornato)
+│   ├── all.pack.txt
+│   ├── all.txt
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── Cargo.toml2
+│   ├── Cargo.toml (aggiungi dipendenze)
+│   ├── README.md
+│   └── unpack.sh
+├── editor-server
+│   ├── src
+│   │   ├── services
+│   │   │   ├── file_service.rs
+│   │   │   └── mod.rs
+│   │   ├── execute.rs
+│   │   ├── handlers.rs
+│   │   ├── main.rs
+│   │   ├── router.rs
+│   │   └── websocket.rs
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   ├── js
+│   │   │   ├── components.js
+│   │   │   ├── editor.js
+│   │   │   └── main.js
+│   │   ├── codemirror.min.css
+│   │   ├── codemirror.min.js
+│   │   ├── dracula.min.css
+│   │   ├── editor.html
+│   │   ├── index.html
+│   │   └── javascript.min.js
+│   └── Cargo.toml
+├── interpreter
+│   ├── examples
+│   │   ├── test2.urcm
+│   │   └── test.urcm
+│   ├── src
+│   │   ├── lib.rs
+│   │   ├── live.rs
+│   │   ├── main.rs
+│   │   ├── parser.rs
+│   │   └── vm.rs
+│   ├── tests
+│   │   └── test_parser.rs
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   └── test.urcm
+├── runtime
+│   ├── src
+│   │   └── main.rs
+│   └── Cargo.toml
+├── scripts
+│   └── chat_full_2026-03-12T05-06-48.sapri
+├── static
+│   ├── script.js (opzionale, vuoto per ora)
+│   └── style.css (opzionale, vuoto per ora)
+├── tools
+│   ├── test
+│   │   └── src
+│   │       ├── firefox_ext.js
+│   │       └── main.rs
+│   ├── firefox_ext.js
+│   ├── package.json
+│   ├── patch.js
+│   ├── README.md
+│   └── test_split.txt
+├── all.txt
+├── Cargo.lock
+├── Cargo.toml
+├── cmd.md
+├── gitignore
+├── pack.txt
+├── README.md
+├── TODO.md
+├── tree.txt
+├── unpack.sh
+└── urcm_rust_bundle.txt
+
+26 directories, 85 files
