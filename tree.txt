@@ -13,6 +13,8 @@
 │   │   │   ├── eval.rs
 │   │   │   ├── mod.rs
 │   │   │   └── reactive.rs
+│   │   ├── definition
+│   │   │   └── registry.rs
 │   │   ├── io
 │   │   │   ├── console.rs
 │   │   │   ├── file.rs
@@ -40,6 +42,23 @@
 │   ├── Cargo.toml (aggiungi dipendenze)
 │   ├── README.md
 │   └── unpack.sh
+├── core-data
+│   ├── src
+│   │   ├── flatten
+│   │   │   └── mod.rs
+│   │   ├── registry
+│   │   │   └── mod.rs
+│   │   ├── schema
+│   │   │   └── mod.rs
+│   │   ├── stream
+│   │   │   └── mod.rs
+│   │   ├── table
+│   │   │   └── mod.rs
+│   │   ├── validation
+│   │   │   └── mod.rs
+│   │   └── lib.rs
+│   ├── Cargo.toml
+│   └── data-core.md
 ├── editor-server
 │   ├── src
 │   │   ├── services
@@ -98,6 +117,10 @@
 │   ├── patch.js
 │   ├── README.md
 │   └── test_split.txt
+├── AI_DECISIONS.txt
+├── AI_INDEX.txt
+├── AI_NAMING.txt
+├── AI_ROADMAP.txt
 ├── all.txt
 ├── Cargo.lock
 ├── Cargo.toml
@@ -106,8 +129,9 @@
 ├── pack.txt
 ├── README.md
 ├── TODO.md
+├── tree.sh
 ├── tree.txt
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-26 directories, 85 files
+35 directories, 100 files
