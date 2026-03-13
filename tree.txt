@@ -1,11 +1,13 @@
 .
 ├── ai
 ├── core
-│   ├── examples
-│   │   ├── basic.rs
-│   │   ├── struct.rs
-│   │   └── web_server.rs
 │   ├── src
+│   │   ├── bucket
+│   │   │   ├── array.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── mod.rs (aggiornato)
+│   │   │   ├── sort.rs
+│   │   │   └── strategy.rs
 │   │   ├── core
 │   │   │   ├── atom_impl.rs
 │   │   │   ├── atom.rs
@@ -33,7 +35,8 @@
 │   │   ├── crud.rs
 │   │   ├── fp.rs
 │   │   ├── lib.rs
-│   │   └── lib.rs (aggiornato)
+│   │   ├── lib.rs (aggiungi alla fine, prima delle definizioni esistenti)
+│   │   └── scanner.rs
 │   ├── all.pack.txt
 │   ├── all.txt
 │   ├── Cargo.lock
@@ -83,6 +86,10 @@
 │   │   ├── index.html
 │   │   └── javascript.min.js
 │   └── Cargo.toml
+├── examples
+│   ├── basic.rs
+│   ├── struct.rs
+│   └── web_server.rs
 ├── interpreter
 │   ├── examples
 │   │   ├── test2.urcm
@@ -121,6 +128,7 @@
 ├── AI_INDEX.txt
 ├── AI_NAMING.txt
 ├── AI_ROADMAP.txt
+├── AI_SSON_PARSER.md
 ├── all.txt
 ├── Cargo.lock
 ├── Cargo.toml
@@ -134,4 +142,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-35 directories, 100 files
+36 directories, 107 files
