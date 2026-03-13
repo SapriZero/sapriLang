@@ -2,6 +2,7 @@
 members = [
 "core",
 "editor-server",
+"core-data",
 ]
 
 resolver = "2"

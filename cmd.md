@@ -1,3 +1,35 @@
+node tools/patch.js all.txt 
+
+Per compilare solo `core`:
+
+```bash
+# Dalla root del workspace
+cargo build -p urcm-core
+
+```
+
+Se vuoi compilare **tutti** i crate del workspace:
+cargo build --workspace
+
+# Dalla root del workspace
+cargo test -p urcm-core
+
+# Oppure con output dettagliato
+cargo test -p urcm-core -- --nocapture
+
+# Per un test specifico
+cargo test -p urcm-core -- test_nome_del_test
+
+# Con backtrace
+RUST_BACKTRACE=1 cargo test -p urcm-core
+
+losta test
+cargo test -p urcm-core -- --list
+
+
+Per lo **Step 2**, intendevi il parser per il formato tabellare `.sson` (quello con `[nome]` e righe CSV)? O vuoi prima sistemare altro?
+
+
 # ngrok è il più semplice
 curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc
 echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list

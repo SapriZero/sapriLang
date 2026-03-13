@@ -1,0 +1,30 @@
+# INDICE DEI FILE DI MEMORIA PER AI
+# URCM/SAPRI Project - Versione 1.0
+# ============================================
+
+Questo indice elenca tutti i file di memoria progettati per l'AI.
+Usa questi file per comprendere rapidamente il progetto, le decisioni e la roadmap.
+
+## FILE DISPONIBILI
+
+| Nome file | Contenuto | Priorità |
+|-----------|-----------|----------|
+| `AI_INDEX.txt` | Indice di tutti i file (questo) | 📌 |
+| `AI_DECISIONS.txt` | Decisioni architetturali prese | 🔴 |
+| `AI_ROADMAP.txt` | Tabella di marcia con priorità | 🔴 |
+| `AI_NAMING.txt` | Schema naming gerarchico completo | 🔴 |
+| `AI_PROBLEMS.txt` | Problemi aperti da risolvere | 🟡 |
+| `AI_QUESTIONS.txt` | Domande in sospeso per l'AI/utente | 🟡 |
+| `AI_STRUCTURE.txt` | Struttura del progetto e crate | 🟢 |
+| `AI_API.txt` | API pubblica del sistema | 🟢 |
+
+## LEGENDA PRIORITÀ
+🔴 Alta - Da leggere subito
+🟡 Media - Da consultare
+🟢 Bassa - Riferimento
+
+## COME USARE QUESTI FILE
+1. Parti da `AI_DECISIONS.txt` per capire le scelte fatte
+2. Poi `AI_NAMING.txt` per lo schema logico
+3. Poi `AI_ROADMAP.txt` per cosa fare ora
+4. Consulta gli altri se serve

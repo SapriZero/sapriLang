@@ -1,0 +1,50 @@
+# TABELLA DI MARCIA (PRIORITÀ)
+# URCM/SAPRI Project - Versione 1.0
+# ============================================
+
+Ordine di implementazione raccomandato.
+
+## 🔴 PRIORITÀ 1 - IMMEDIATO (ORA)
+
+| # | Task | File/Dove | Dipendenze |
+|---|------|-----------|------------|
+| 1 | Implementare registry + dispatcher 64k | `core/src/registry/` | Nessuna |
+| 2 | Popolare con nomi built-in (core, io, web) | `core/src/registry/builtin.rs` | #1 |
+| 3 | Sistemare errore 405 salvataggio chat | `editor-server/src/handlers.rs` | Nessuna |
+| 4 | Creare endpoint `/api/ai/save` | `editor-server/src/handlers.rs` | #3 |
+| 5 | Testare Firefox extension | `tools/firefox_ext.js` | #3, #4 |
+
+## 🟡 PRIORITÀ 2 - BREVE TERMINE (PROSSIMI GIORNI)
+
+| # | Task | File/Dove | Dipendenze |
+|---|------|-----------|------------|
+| 6 | Rotte da file esterno (JSON/TOML) | `editor-server/src/router.rs` | #1 |
+| 7 | Validazioni in rotta | `editor-server/src/middleware.rs` | #6 |
+| 8 | Trait Repository per DB | `core/src/db/` | #1 |
+| 9 | Implementazione SQLite | `core-db/src/sqlite.rs` | #8 |
+| 10 | CRUD generico | `core/src/crud.rs` (da espandere) | #8 |
+
+## 🔵 PRIORITÀ 3 - MEDIO TERMINE
+
+| # | Task | File/Dove | Dipendenze |
+|---|------|-----------|------------|
+| 11 | Decision manager (array 64k per stati) | `core/src/decision.rs` | #1 |
+| 12 | State machine basata su ID | `core/src/state.rs` | #11 |
+| 13 | Supporto DB alternativo (Redb/Sled) | `core-db/src/` | #8 |
+| 14 | Plugin system (registrazione esterna) | `core/src/registry/plugin.rs` | #1 |
+
+## 🟣 PRIORITÀ 4 - LUNGO TERMINE
+
+| # | Task | File/Dove | Dipendenze |
+|---|------|-----------|------------|
+| 15 | Generatore codice Rust da SAPRI | `sapri-compiler/` | Tutti |
+| 16 | Linguaggio SAPRI completo | `sapri/` | #15 |
+| 17 | Documentazione automatica da registro nomi | `core/src/registry/doc.rs` | #1 |
+
+## ⚠️ BLOCCHI CORRENTI
+
+| ID | Descrizione | Severità | Soluzione proposta |
+|----|-------------|----------|-------------------|
+| B01 | Firefox extension: errore 405 su salvataggio | Alta | Aggiungere endpoint POST `/api/ai/save` |
+| B02 | Dispatcher 64k non ancora implementato | Alta | Task #1 |
+| B03 | Rotte hard-coded in router.rs | Media | Task #6 |

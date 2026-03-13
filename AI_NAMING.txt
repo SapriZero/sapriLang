@@ -1,0 +1,7 @@
+# SCHEMA NAMING GERARCHICO COMPLETO
+# URCM/SAPRI Project - Versione 1.0
+# ============================================
+
+Struttura standardizzata per tutti i nomi del sistema.
+
+## 📐 FORMATO GENERALE

@@ -1,0 +1,53 @@
+# DECISIONI ARCHITETTURALI PRESE
+# URCM/SAPRI Project - Versione 1.0
+# ============================================
+
+Elenco delle decisioni chiave già prese e validate.
+
+## 🏗️ ARCHITETTURA GENERALE
+
+| ID | Decisione | Motivazione | Data |
+|----|-----------|-------------|------|
+| D01 | Workspace multi-crate (core, core-io, core-web, core-db, prelude) | Isolare dipendenze, compilazione modulare | 2026-03-12 |
+| D02 | Prelude unico che ri-esporta API stabile | Un solo import per utente, protezione cambi librerie | 2026-03-12 |
+| D03 | Isolamento dipendenze per crate | Cambi backend senza impattare API pubblica | 2026-03-12 |
+
+## 📛 NAMING GERARCHICO
+
+| ID | Decisione | Motivazione | Data |
+|----|-----------|-------------|------|
+| D04 | Struttura nomi: dominio.categoria.azione:sottotipo | Chiarezza, estensibilità, auto-documentazione | 2026-03-12 |
+| D05 | Registry centrale con tutti i nomi all'avvio | Unico punto di verifica, plugin system | 2026-03-12 |
+| D06 | Dispatcher a 64k (array di puntatori) | Lookup O(1), zero allocazioni, velocità massima | 2026-03-12 |
+| D07 | Hash a 16 bit (65536 slot) con overflow su 32 | Bilanciamento memoria vs collisioni | 2026-03-12 |
+
+## 🛣️ ROTTE E CONTROLLER
+
+| ID | Decisione | Motivazione | Data |
+|----|-----------|-------------|------|
+| D08 | Rotte definite in file esterno (JSON/TOML) | Separazione configurazione/codice | 2026-03-12 |
+| D09 | Mapping nome rotta → ID registry | Riutilizzo stesso meccanismo | 2026-03-12 |
+| D10 | Validazioni definite nel file route | Centralizzate, dichiarative | 2026-03-12 |
+
+## 💾 DATABASE
+
+| ID | Decisione | Motivazione | Data |
+|----|-----------|-------------|------|
+| D11 | SQLite come default | Semplice, embedded, zero-config | 2026-03-12 |
+| D12 | Trait Repository unificato | Supporto backend alternativi (Redb, Sled) | 2026-03-12 |
+| D13 | CRUD generico su qualsiasi modello | Riutilizzo, meno boilerplate | 2026-03-12 |
+
+## 🧰 STRUMENTI
+
+| ID | Decisione | Motivazione | Data |
+|----|-----------|-------------|------|
+| D14 | Patch tool in JS con marker --$CHANGE=== | Modifiche precise senza copia/incolla | 2026-03-12 |
+| D15 | Firefox extension per salvare chat | Integrazione con Deepseek | 2026-03-12 |
+| D16 | Tree.txt per struttura progetto | Visione d'insieme per AI | 2026-03-12 |
+
+## 🔮 FUTURE DIREZIONI
+
+| ID | Decisione | Motivazione | Data |
+|----|-----------|-------------|------|
+| D17 | Plugin system con registro nomi | Estendibilità da crates esterni | 2026-03-12 |
+| D18 | Generatore codice Rust da SAPRI | Obiettivo finale del linguaggio | 2026-03-12 |
