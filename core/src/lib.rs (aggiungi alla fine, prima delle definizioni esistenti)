@@ -1,0 +1,17 @@
+//! URCM Core Library
+
+// Moduli esistenti...
+pub mod core;
+pub mod definition;
+pub mod io;
+pub mod macros;
+pub mod fp;
+pub mod crud;
+pub mod web;
+
+// AGGIUNGI QUESTO:
+pub mod bucket;
+
+// Re-export...
+pub use bucket::*;
+```

@@ -3,6 +3,8 @@ pub mod fp;
 pub mod macros;
 pub mod io;
 pub mod crud;
+pub mod bucket;
+pub mod scanner;
 
 pub use core::UrcmCtx;
 pub use core::atom::Atom;

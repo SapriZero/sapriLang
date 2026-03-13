@@ -12,6 +12,7 @@ pub mod validation;
 pub mod table;
 pub mod stream;
 pub mod registry;
+// pub mod definition; 
 
 // Re-export principali
 pub use flatten::{Flattener, FlattenedData, FlattenOptions};

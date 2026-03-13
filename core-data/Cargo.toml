@@ -15,6 +15,7 @@ thiserror = "2.0"
 tracing = "0.1"
 rayon = "1.10"
 
+
 # Feature: Flattening base (json-unflattening)
 json-unflattening = { version = "0.1.5", optional = true }
 
@@ -35,7 +36,7 @@ arrow = { version = "55", optional = true }
 datafusion = { version = "42", optional = true }
 
 [features]
-default = ["flattening"]  # solo la funzionalità base
+default = ["flattening", "fast-json"]  # abilita queste di default
 
 # Feature atomiche
 flattening = ["dep:json-unflattening"]

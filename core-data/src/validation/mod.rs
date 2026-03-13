@@ -6,6 +6,9 @@ use jsonschema::{Draft, JSONSchema};
 use serde_json::Value;
 use std::sync::Arc;
 
+use serde_json::json;
+use std::collections::HashMap;
+
 pub struct Validator {
     schemas: HashMap<String, Arc<JSONSchema>>,
     options: ValidationOptions,
