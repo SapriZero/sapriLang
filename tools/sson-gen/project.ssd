@@ -1,0 +1,48 @@
+[_META]
+  root = "unknown"
+  generated_by = "riveter + sson-gen"
+
+[project.tree]
+core/
+  Cargo.toml2
+  crud.rs
+  atom_impl.rs
+  mod.rs
+  atom.rs
+  context.rs
+  eval.rs
+  reactive.rs
+  src/
+  core/
+definition/
+  registry.rs
+sson/
+  error.rs
+  mod.rs
+  parser.rs
+  token.rs
+  ast.rs
+bucket/
+  mod.rs
+  array.rs
+  mod.rs (aggiornato)
+  sort.rs
+  strategy.rs
+web/
+  mod.rs
+  middleware.rs
+  dto.rs
+  server.rs
+  controller.rs
+  router.rs
+io/
+  mod.rs
+  file.rs
+  memory.rs
+  console.rs
+  http.rs
+macros/
+  mod.rs
+
+[project.metrics]
+  total_files = 84

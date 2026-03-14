@@ -1,0 +1,31 @@
+[package]
+name = "sson-gen"
+version = "0.1.0"
+edition = "2021"
+description = "Generatore di file .sson dalla struttura di progetti Rust"
+
+[dependencies]
+# Core URCM per tipi e formati
+urcm-core = { path = "../../core" }
+
+# Parsing XML output di riveter
+serde = { version = "1.0", features = ["derive"] }
+serde-xml-rs = "0.6"
+
+# Esecuzione comandi esterni
+duct = "0.13"
+
+# Gestione path e filesystem
+walkdir = "2"
+glob = "0.3"
+
+# Utility
+anyhow = "1.0"
+clap = { version = "4", features = ["derive"] }
+colored = "2"
+chrono = "0.4"        # <-- aggiunto
+tempfile = "3"        # <-- aggiunto
+
+[[bin]]
+name = "sson-gen"
+path = "src/main.rs"
