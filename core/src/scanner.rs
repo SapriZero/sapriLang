@@ -171,8 +171,6 @@ mod tests {
         }
     }
     
-    
-    
     #[test]
     fn test_bucket_scanner_simple() {
         let data = b"hello world hello rust world";

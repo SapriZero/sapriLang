@@ -72,7 +72,7 @@ pub fn counting_sort_u16_stable(data: &mut [u32]) {
     if data.is_empty() { return; }
 
     // Array temporaneo per stabilità
-    let mut temp = data.to_vec();
+    let temp = data.to_vec();
     let mut count = [0u32; 65536];
 
     // Conteggio
@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn test_counting_sort_u16_stable() {
         // Test stabilità con coppie (chiave, indice)
-        let mut pairs: Vec<(u16, usize)> = (0..100)
+        let pairs: Vec<(u16, usize)> = (0..100)
             .map(|i| ((i % 10) as u16, i))
             .collect();
 

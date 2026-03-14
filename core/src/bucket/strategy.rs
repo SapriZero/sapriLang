@@ -1,7 +1,6 @@
 //! Estensione di TokenStrategy per supporto bucket 65535
 
 use crate::scanner::TokenStrategy;
-use std::borrow::Cow;
 
 /// Estensione di TokenStrategy con supporto bucket
 pub trait BucketStrategy: TokenStrategy {

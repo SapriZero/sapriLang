@@ -5,6 +5,7 @@ pub mod io;
 pub mod crud;
 pub mod bucket;
 pub mod scanner;
+pub mod sson;
 
 pub use core::UrcmCtx;
 pub use core::atom::Atom;

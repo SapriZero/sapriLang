@@ -25,6 +25,12 @@
 │   │   │   └── mod.rs
 │   │   ├── macros
 │   │   │   └── mod.rs
+│   │   ├── sson
+│   │   │   ├── ast.rs
+│   │   │   ├── error.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── parser.rs
+│   │   │   └── token.rs
 │   │   ├── web
 │   │   │   ├── controller.rs
 │   │   │   ├── dto.rs
@@ -115,6 +121,17 @@
 │   ├── script.js (opzionale, vuoto per ora)
 │   └── style.css (opzionale, vuoto per ora)
 ├── tools
+│   ├── sson-gen
+│   │   ├── src
+│   │   │   ├── basic_generator.rs
+│   │   │   ├── ferrograph_adapter.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── main.rs
+│   │   │   ├── naming.rs
+│   │   │   └── xml_parser.rs
+│   │   ├── Cargo.toml
+│   │   ├── project.ssd
+│   │   └── README.md
 │   ├── test
 │   │   └── src
 │   │       ├── firefox_ext.js
@@ -142,4 +159,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-36 directories, 107 files
+39 directories, 121 files
