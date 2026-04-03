@@ -1,5 +1,68 @@
 .
 ├── ai
+│   ├── data
+│   │   ├── italiano_2_4_2007_09_01
+│   │   │   ├── it_IT.aff
+│   │   │   ├── it_IT_AUTHORS
+│   │   │   ├── it_IT_ChangeLog
+│   │   │   ├── it_IT_COPYING
+│   │   │   ├── it_IT.dic
+│   │   │   ├── it_IT_license.txt
+│   │   │   ├── it_IT_notes.txt
+│   │   │   ├── it_IT_README.1st
+│   │   │   ├── it_IT_README.txt
+│   │   │   ├── it_IT_statistiche.ods
+│   │   │   └── it_IT_todo.txt
+│   │   ├── itwiki-latest-pages-articles.xml.bz2
+│   │   ├── wikipedia_words_clean.txt
+│   │   └── wikipedia_words.txt
+│   ├── scripts
+│   │   ├── __pycache__
+│   │   │   └── build_dictionary.cpython-312.pyc
+│   │   ├── build_dictionary.py
+│   │   ├── build_final_dictionary.py
+│   │   ├── clean_wikipedia_words.py
+│   │   └── extract_words_from_wikipedia.py
+│   ├── src
+│   │   ├── ai.egg-info
+│   │   │   ├── dependency_links.txt
+│   │   │   ├── PKG-INFO
+│   │   │   ├── SOURCES.txt
+│   │   │   └── top_level.txt
+│   │   ├── core
+│   │   │   ├── __pycache__
+│   │   │   │   ├── atom.cpython-312.pyc
+│   │   │   │   ├── equilibrium.cpython-312.pyc
+│   │   │   │   ├── graph.cpython-312.pyc
+│   │   │   │   ├── __init__.cpython-312.pyc
+│   │   │   │   └── relation.cpython-312.pyc
+│   │   │   ├── atom.py
+│   │   │   ├── equilibrium.py
+│   │   │   ├── graph.py
+│   │   │   ├── __init__.py
+│   │   │   └── relation.py
+│   │   ├── nlp
+│   │   │   ├── __pycache__
+│   │   │   │   ├── brain.cpython-312.pyc
+│   │   │   │   ├── dictionary.cpython-312.pyc
+│   │   │   │   ├── dictionary_loader.cpython-312.pyc
+│   │   │   │   ├── __init__.cpython-312.pyc
+│   │   │   │   ├── meaning.cpython-312.pyc
+│   │   │   │   ├── parser.cpython-312.pyc
+│   │   │   │   ├── responder.cpython-312.pyc
+│   │   │   │   └── tokenizer.cpython-312.pyc
+│   │   │   ├── brain.py
+│   │   │   ├── dictionary_builder.py
+│   │   │   ├── dictionary_loader.py
+│   │   │   ├── dictionary.py
+│   │   │   ├── __init__.py
+│   │   │   ├── meaning.py
+│   │   │   ├── parser.py
+│   │   │   ├── responder.py
+│   │   │   └── tokenizer.py
+│   │   └── urcm_nlp.py
+│   ├── pyproject.toml
+│   └── README.md
 ├── core
 │   ├── src
 │   │   ├── bucket
@@ -24,7 +87,12 @@
 │   │   │   ├── memory.rs
 │   │   │   └── mod.rs
 │   │   ├── macros
-│   │   │   └── mod.rs
+│   │   │   ├── cascade.rs
+│   │   │   ├── mod.rs
+│   │   │   ├── obj.rs
+│   │   │   ├── path.rs
+│   │   │   ├── reactive.rs
+│   │   │   └── struct_with_keys.rs
 │   │   ├── sson
 │   │   │   ├── ast.rs
 │   │   │   ├── error.rs
@@ -41,8 +109,12 @@
 │   │   ├── crud.rs
 │   │   ├── fp.rs
 │   │   ├── lib.rs
+│   │   ├── lib.rs (aggiungi)
 │   │   ├── lib.rs (aggiungi alla fine, prima delle definizioni esistenti)
+│   │   ├── obj.rs
 │   │   └── scanner.rs
+│   ├── tests
+│   │   └── test_macros.rs
 │   ├── all.pack.txt
 │   ├── all.txt
 │   ├── Cargo.lock
@@ -123,11 +195,18 @@
 ├── tools
 │   ├── sson-gen
 │   │   ├── src
+│   │   │   ├── tree_walker
+│   │   │   │   ├── impl.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   └── tree_walker.rs
+│   │   │   ├── basic_generator2.rs
 │   │   │   ├── basic_generator.rs
 │   │   │   ├── ferrograph_adapter.rs
+│   │   │   ├── format.rs
 │   │   │   ├── lib.rs
 │   │   │   ├── main.rs
 │   │   │   ├── naming.rs
+│   │   │   ├── tree_walker.rs
 │   │   │   └── xml_parser.rs
 │   │   ├── Cargo.toml
 │   │   ├── project.ssd
@@ -159,4 +238,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-39 directories, 121 files
+51 directories, 188 files

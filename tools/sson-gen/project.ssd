@@ -1,6 +1,17 @@
 [_META]
-  generated = "2026-03-14 15:03:38"
+  generated = "2026-03-14 15:33:52"
   tool = "sson-gen"
   version = "0.1.0"
 
 [project.structure]
+  Cargo.toml (toml)
+  README.md (markdown)
+  project.ssd
+  src/
+    basic_generator.rs (rust)
+    basic_generator2.rs (rust)
+    ferrograph_adapter.rs (rust)
+    lib.rs (rust)
+    main.rs (rust)
+    naming.rs (rust)
+    xml_parser.rs (rust)
