@@ -12,6 +12,8 @@ editor-server/static/*.min.css
 tools/node_modules/
 tools/package-lock.json
 
+all.txt
+
 # Data directories
 /scripts/
 /ai/

@@ -1,54 +1,64 @@
-//! Errori del parser .sson
-
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SsonError {
-    /// Errore di sintassi
-    SyntaxError { line: usize, col: usize, message: String },
+    /// Errore di sintassi nel lexer
+    LexerError { line: usize, col: usize, message: String },
 
-    /// Token non atteso
+    /// Token non atteso durante il parsing
     UnexpectedToken { line: usize, col: usize, expected: String, found: String },
 
-    /// Sezione senza nome
-    MissingSectionName { line: usize },
+    /// Path malformato o con caratteri non validi
+    InvalidPath { path: String, reason: String },
 
-    /// Numero campi errato in una riga
-    FieldCountMismatch { line: usize, expected: usize, got: usize },
+    /// Campo con nome non valido
+    InvalidFieldName { name: String, reason: String },
 
-    /// Carattere non valido
-    InvalidChar { line: usize, c: char },
+    /// Tipo sconosciuto o non parsabile
+    UnknownTypeCode { code: String },
 
-    /// Valore non valido
-    InvalidValue { line: usize, value: String, expected_type: String },
+    /// Proprietà `_: ` non riconosciuta
+    UnknownProperty { prop: String, context: String },
 
-    /// Errore I/O
+    /// Riferimento circolare rilevato
+    CircularReference { path: String, cycle: Vec<String> },
+
+    /// Violazione vincolo in strict mode
+    StrictViolation { constraint: String, message: String },
+
+    /// Errore I/O durante il caricamento file
     IoError(String),
 
-    /// Errore generico
+    /// Errore generico con messaggio
     Other(String),
 }
 
 impl fmt::Display for SsonError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SsonError::SyntaxError { line, col, message } => {
-                write!(f, "Syntax error at {}:{}: {}", line, col, message)
+            SsonError::LexerError { line, col, message } => {
+                write!(f, "Lexer error at {}:{}: {}", line, col, message)
             }
             SsonError::UnexpectedToken { line, col, expected, found } => {
-                write!(f, "Unexpected token at {}:{}: expected {}, found {}", line, col, expected, found)
+                write!(f, "Unexpected token at {}:{}: expected '{}', found '{}'", line, col, expected, found)
             }
-            SsonError::MissingSectionName { line } => {
-                write!(f, "Missing section name at line {}", line)
+            SsonError::InvalidPath { path, reason } => {
+                write!(f, "Invalid path '{}': {}", path, reason)
             }
-            SsonError::FieldCountMismatch { line, expected, got } => {
-                write!(f, "Field count mismatch at line {}: expected {}, got {}", line, expected, got)
+            SsonError::InvalidFieldName { name, reason } => {
+                write!(f, "Invalid field name '{}': {}", name, reason)
             }
-            SsonError::InvalidChar { line, c } => {
-                write!(f, "Invalid character '{}' at line {}", c, line)
+            SsonError::UnknownTypeCode { code } => {
+                write!(f, "Unknown type code: '{}'", code)
             }
-            SsonError::InvalidValue { line, value, expected_type } => {
-                write!(f, "Invalid value '{}' at line {}, expected {}", value, line, expected_type)
+            SsonError::UnknownProperty { prop, context } => {
+                write!(f, "Unknown property '_:{}' in context '{}'", prop, context)
+            }
+            SsonError::CircularReference { path, cycle } => {
+                write!(f, "Circular reference detected: {} → [{}]", path, cycle.join(" → "))
+            }
+            SsonError::StrictViolation { constraint, message } => {
+                write!(f, "Strict violation [{}]: {}", constraint, message)
             }
             SsonError::IoError(msg) => write!(f, "IO error: {}", msg),
             SsonError::Other(msg) => write!(f, "Error: {}", msg),
@@ -57,3 +67,5 @@ impl fmt::Display for SsonError {
 }
 
 impl std::error::Error for SsonError {}
+
+pub type Result<T> = std::result::Result<T, SsonError>;

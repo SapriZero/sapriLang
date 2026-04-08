@@ -6,7 +6,7 @@ description = "Data processing library for URCM/SAPRI - Flattening, Schema, Vali
 
 [dependencies]
 # Core dipendenze (sempre necessarie)
-urcm-core = { path = "../core" }
+sapri_core = { path = "../core" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 csv = "1.3"

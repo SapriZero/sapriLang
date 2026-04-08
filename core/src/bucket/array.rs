@@ -30,10 +30,11 @@ impl<T, const N: usize> BucketArray<T, N> {
     #[inline(always)]
     pub fn insert(&mut self, idx: usize, value: T) -> Result<(), BucketError> {
         if idx >= N {
-            return Err(BucketError::IndexOutOfRange { idx, max: N });
+           // return Err(BucketError::IndexOutOfRange { idx, max: N });
+             return Err(BucketError::ValueAlreadyExists { idx });
         }
         if self.slots[idx].is_some() {
-            return Err(BucketError::AlreadyExists { idx });
+               return Err(BucketError::ValueAlreadyExists { idx });
         }
         self.slots[idx] = Some(value);
         self.count += 1;
@@ -151,17 +152,24 @@ impl fmt::Display for BucketStats {
 }
 
 /// Errori del bucket
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BucketError {
-    #[error("Index {idx} out of range (max {max})")]
     IndexOutOfRange { idx: usize, max: usize },
-
-    #[error("Value already exists at index {idx}")]
-    AlreadyExists { idx: usize },
-
-    #[error("Bucket is full (max {max})")]
-    Full { max: usize },
+    ValueAlreadyExists { idx: usize },
+    BucketFull { max: usize },
 }
+
+impl fmt::Display for BucketError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BucketError::IndexOutOfRange { idx, max } => write!(f, "Index {} out of range (max {})", idx, max),
+            BucketError::ValueAlreadyExists { idx } => write!(f, "Value already exists at index {}", idx),
+            BucketError::BucketFull { max } => write!(f, "Bucket is full (max {})", max),
+        }
+    }
+}
+
+impl std::error::Error for BucketError {}
 
 #[cfg(test)]
 mod tests {

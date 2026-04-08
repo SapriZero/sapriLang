@@ -1,24 +1,31 @@
-//! Parser per il formato .sson (Sapri Script Object Notation)
-//! Utilizza il sistema a bucket 65535 per tokenizzazione ultra-veloce
+//! Sapri Structured Object Notation (SSON) Core
+//!
+//! Parser dichiarativo, dizionario piatto e validatore strutturale.
+//! Progettato per essere AI-ready, deterministico e compatibile con URCM.
 
-mod parser;
-mod token;
-mod ast;
-mod error;
+pub mod ast;
+pub mod token;
+pub mod lexer;
+pub mod parser;
+pub mod dict;
+pub mod error;
+pub mod validator;
+pub use ast::ValidationReport;
 
-pub use parser::{SsonParser, parse_sson};
-pub use ast::{SsonDocument, Table, Field, Value};
+pub use ast::{SsonDocument, FieldNode, SsonMode, TypeCode, FieldProperty, ConstraintRule, ConstraintKind, FlatDict};
+pub use token::Token;
+pub use lexer::Lexer;
+pub use parser::{parse_sson, ParseResult};
+pub use dict::FieldDict;
 pub use error::SsonError;
 
-/// Versione semplice: parse diretto da stringa
-pub fn from_str(input: &str) -> Result<SsonDocument, SsonError> {
-    let mut parser = SsonParser::new();
-    parser.parse(input)
-}
+/// Versione del parser
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-/// Versione da file
-pub fn from_file(path: &str) -> Result<SsonDocument, SsonError> {
-    let content = std::fs::read_to_string(path)
-        .map_err(|e| SsonError::IoError(e.to_string()))?;
-    from_str(&content)
+/// Parse rapido da stringa a dizionario validato
+pub fn parse_and_validate(input: &str, mode: SsonMode) -> Result<FieldDict, SsonError> {
+    let doc = parse_sson(input)?;
+    let mut dict = FieldDict::from_document(doc, mode);
+    dict.validate();
+    Ok(dict)
 }

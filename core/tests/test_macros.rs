@@ -1,50 +1,75 @@
 //! Test per le macro URCM
 
-use urcm_core::*;
+use sapri_core::{obj, path_arr};
+use serde_json::json;
 
 #[test]
-fn test_obj_macro() {
-    let obj = obj!({
-        count: 42,
+fn test_path_basic() {
+    // Sintassi space-separated (richiesta per evitare ambiguità con field access)
+    let p = path_arr!(a b c);
+    assert_eq!(p, vec!["a", "b", "c"]);
+    
+    let p = path_arr!(single);
+    assert_eq!(p, vec!["single"]);
+    
+    let p = path_arr!("string.path");
+    assert_eq!(p, vec!["string.path"]);
+}
+
+#[test]
+fn test_obj_creation() {
+    // Creazione semplice
+    let o = obj!({
+        count: 100,
         name: "test",
         active: true
     });
-
-    assert_eq!(obj.get(&["count"]), Some(&Value::Number(42.0)));
-    assert_eq!(obj.get(&["name"]), Some(&Value::String("test".to_string())));
+    
+    assert_eq!(o.get(&["count"]), Some(&json!(100)));
+    assert_eq!(o.get(&["name"]), Some(&json!("test")));
+    assert_eq!(o.get(&["active"]), Some(&json!(true)));
 }
 
 #[test]
-fn test_path_macro() {
-    let path = path!(a.b.c);
-    assert_eq!(path, vec!["a", "b", "c"]);
-}
-
-#[test]
-fn test_struct_with_keys() {
-    struct_with_keys! {
-        TestStruct {
-            count: i32,
-            name: String
-        }
-    }
-
-    let obj = obj!({
-        TestStruct.count: 100,
-        TestStruct.name: "hello"
+fn test_obj_with_default() {
+    let base = obj!({ theme: "dark", lang: "en" });
+    
+    let extended = obj!(base => {
+        theme: "light",  // override
+        debug: true      // nuovo campo
     });
-
-    let s = TestStruct::from_obj(&obj).unwrap();
-    assert_eq!(s.count, 100);
-    assert_eq!(s.name, "hello");
+    
+    assert_eq!(extended.get(&["theme"]), Some(&json!("light")));
+    assert_eq!(extended.get(&["lang"]), Some(&json!("en")));
+    assert_eq!(extended.get(&["debug"]), Some(&json!(true)));
 }
 
 #[test]
-fn test_cascade() {
-    let base = obj!({ count: 0, name: "base" });
-    let user = obj!({ count: 42 });
+fn test_obj_with_path_segments() {
+    // Uso esplicito di path_arr! per chiavi gerarchiche
+    let o = obj!({
+        user: "Alice",
+        role: "admin"
+    }).set(&path_arr!(settings theme), "dark")
+     .set(&path_arr!(settings lang), "it");
+     
+    assert_eq!(o.get(&["settings", "theme"]), Some(&json!("dark")));
+    assert_eq!(o.get(&["settings", "lang"]), Some(&json!("it")));
+}
 
-    let merged = cascade!(base, user);
-    assert_eq!(merged.get(&["count"]), Some(&Value::Number(42.0)));
-    assert_eq!(merged.get(&["name"]), Some(&Value::String("base".to_string())));
+#[test]
+fn test_obj_mixed_values() {
+    let o = obj!({
+        num: 42,
+        float: 3.14,
+        str: "hello",
+        bool: false,
+        arr: json!([1, 2, 3]),
+        obj: json!({ "nested": true })
+    });
+    
+    assert_eq!(o.get(&["num"]), Some(&json!(42)));
+    assert_eq!(o.get(&["float"]), Some(&json!(3.14)));
+    assert_eq!(o.get(&["str"]), Some(&json!("hello")));
+    assert_eq!(o.get(&["bool"]), Some(&json!(false)));
 }

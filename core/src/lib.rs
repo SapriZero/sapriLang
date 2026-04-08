@@ -1,4 +1,3 @@
-pub mod core;
 pub mod fp;
 pub mod macros;
 pub mod io;
@@ -7,8 +6,9 @@ pub mod bucket;
 pub mod scanner;
 pub mod sson;
 
-pub use core::UrcmCtx;
-pub use core::atom::Atom;
-pub use core::atom_impl::{AtomImpl, PromiseState, ExternalSource};
+// Se i tipi sono nei rispettivi file, correggi i path così:
+// pub use atom::UrcmCtx;
+// pub use atom::Atom;
+// pub use atom_impl::{AtomImpl, PromiseState, ExternalSource};
 pub use fp::{eval, mask, Either};
 pub use crud::Crud;

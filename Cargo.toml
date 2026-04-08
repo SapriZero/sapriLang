@@ -3,6 +3,7 @@ members = [
 "core",
 "editor-server",
 "core-data",
+"sson",
 "tools/sson-gen",
 ]
 
