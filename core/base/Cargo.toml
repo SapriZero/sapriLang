@@ -1,0 +1,15 @@
+[package]
+name = "sapri_core_base"
+version = "0.1.0"
+edition = "2021"
+description = "Primitive fondamentali, FP base e utility per Sapri"
+license = "MIT"
+
+[dependencies]
+itertools = "0.8.0"
+thiserror = "1.0"
+fp-core = "0.1.9"  # ✅ Se è da crates.io. Se è locale, usa: { path = "../../path/to/fp-core" }
+
+[lints.rust]
+unused_imports = "warn"
+unused_macros = "warn"

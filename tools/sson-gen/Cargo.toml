@@ -6,7 +6,7 @@ description = "Generatore di file .sson dalla struttura di progetti Rust"
 
 [dependencies]
 # Core URCM per tipi e formati
-sapri_core = { path = "../../core" }
+sapri_core_base = { path = "../../core/base" }
 
 # Parsing XML output di riveter (per compatibilità)
 serde = { version = "1.0", features = ["derive"] }

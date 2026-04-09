@@ -1,6 +1,6 @@
 [workspace]
 members = [
-"core",
+"core/base", 
 "editor-server",
 "core-data",
 "sson",
