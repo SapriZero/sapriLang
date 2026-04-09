@@ -1,0 +1,15 @@
+[package]
+name = "sapri_rust_dsl"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_base = { path = "../base", version = "0.1" }
+regex = "1.0"
+once_cell = "1.19"
+
+[dev-dependencies]
+
+[features]
+default = ["global-context"]
+global-context = []

@@ -1,6 +1,8 @@
 [workspace]
 members = [
 "core/base", 
+"core/rust_dsl",
+"core/obj",
 "editor-server",
 "core-data",
 "sson",

@@ -1,78 +1,490 @@
---$FILE===: core/base/src/macros/mod.rs
-//! Macro pure e leggere per il layer base.
-//! Zero dipendenze esterne. Espansione immediata.
+--$CHANGE===: core/obj/src/obj.rs
+//! Struttura Obj dinamica con supporto path
 
-pub mod eval;
-pub mod fp;
-pub mod error;
+use std::collections::HashMap;
+use crate::value::Value;
 
-// Re-export per accesso modulare (es. crate::macros::eval)
-pub use eval::{eval, mask};
-pub use fp::{curry, lazy_if};
-pub use error::{try_or, unwrap_or_else};
+type Key = String;
 
---$FILE===: core/base/src/macros/eval.rs
-//! Valutazione condizionale pura e masking leggero.
-
-/// Valuta un'espressione solo se la condizione è vera, altrimenti fallback.
-#[macro_export]
-macro_rules! eval {
-    ($cond:expr, $then:expr, $else:expr) => {
-        if $cond { $then } else { $else }
-    };
-    ($cond:expr, $then:expr) => {
-        if $cond { Some($then) } else { None }
-    };
+/// Oggetto dinamico stile JavaScript
+#[derive(Debug, Clone, Default)]
+pub struct Obj {
+    data: HashMap<Key, Value>,
 }
 
-/// Applica una maschera/trasformazione a un valore solo se soddisfa un predicato.
-#[macro_export]
-macro_rules! mask {
-    ($val:expr, $pred:expr, $transform:expr) => {
-        if $pred(&$val) { $transform($val) } else { $val }
-    };
-}
+impl Obj {
+    /// Crea un nuovo oggetto vuoto
+    pub fn new() -> Self {
+        Self::default()
+    }
 
---$FILE===: core/base/src/macros/fp.rs
-//! Utility funzionali leggere.
+    /// Imposta un valore nel campo (semplice)
+    pub fn set(mut self, key: &str, value: impl Into<Value>) -> Self {
+        self.data.insert(key.to_string(), value.into());
+        self
+    }
 
-/// Crea una closure curry da una funzione a 2 argomenti.
-#[macro_export]
-macro_rules! curry {
-    ($fn:path) => {
-        |a| move |b| $fn(a, b)
-    };
-}
-
-/// Esegue il blocco solo se la condizione è vera, altrimenti ritorna None.
-#[macro_export]
-macro_rules! lazy_if {
-    ($cond:expr, $block:block) => {
-        if $cond { Some($block) } else { None }
-    };
-}
-
---$FILE===: core/base/src/macros/error.rs
-//! Macro ergonomiche per gestione errori nel layer base.
-
-/// Tenta un'operazione, se fallisce ritorna un valore di fallback.
-#[macro_export]
-macro_rules! try_or {
-    ($expr:expr, $fallback:expr) => {
-        match $expr {
-            Ok(v) => v,
-            Err(_) => $fallback,
+    /// Imposta un valore per path (crea oggetti intermedi se necessario)
+    pub fn set_path(mut self, path: &[&str], value: impl Into<Value>) -> Self {
+        if path.is_empty() {
+            return self;
         }
-    };
+
+        let value = value.into();
+
+        if path.len() == 1 {
+            self.data.insert(path[0].to_string(), value);
+            return self;
+        }
+
+        // Path con più livelli
+        let key = path[0].to_string();
+        let remaining = &path[1..];
+
+        let child = self.data
+            .remove(&key)
+            .and_then(|v| {
+                if let Value::Obj(obj) = v {
+                    Some(obj)
+                } else {
+                    None
+                }
+            })
+            .unwrap_or_else(Obj::new);
+
+        let new_child = child.set_path(remaining, value);
+        self.data.insert(key, Value::Obj(new_child));
+        self
+    }
+
+    /// Ottiene un valore per chiave semplice
+    pub fn get(&self, key: &str) -> Option<&Value> {
+        self.data.get(key)
+    }
+
+    /// Ottiene un valore per path array
+    pub fn get_path(&self, path: &[&str]) -> Option<&Value> {
+        if path.is_empty() {
+            return None;
+        }
+
+        let first = path[0];
+        let value = self.data.get(first)?;
+
+        if path.len() == 1 {
+            return Some(value);
+        }
+
+        match value {
+            Value::Obj(obj) => obj.get_path(&path[1..]),
+            _ => None,
+        }
+    }
+
+    /// Ottiene un valore per dot notation (es. "a.b.c")
+    pub fn get_dot(&self, dot_path: &str) -> Option<&Value> {
+        let path: Vec<&str> = dot_path.split('.').collect();
+        self.get_path(&path)
+    }
+
+    /// Imposta un valore per dot notation
+    pub fn set_dot(mut self, dot_path: &str, value: impl Into<Value>) -> Self {
+        let path: Vec<&str> = dot_path.split('.').collect();
+        self.set_path(&path, value)
+    }
+
+    /// Rimuove un campo
+    pub fn remove(mut self, key: &str) -> Self {
+        self.data.remove(key);
+        self
+    }
+
+    /// Rimuove per path
+    pub fn remove_path(mut self, path: &[&str]) -> Self {
+        if path.is_empty() {
+            return self;
+        }
+
+        if path.len() == 1 {
+            self.data.remove(path[0]);
+            return self;
+        }
+
+        let key = path[0];
+        let remaining = &path[1..];
+
+        if let Some(Value::Obj(obj)) = self.data.get(key).cloned() {
+            let new_obj = obj.remove_path(remaining);
+            self.data.insert(key.to_string(), Value::Obj(new_obj));
+        }
+        self
+    }
+
+    /// Verifica se contiene una chiave
+    pub fn contains(&self, key: &str) -> bool {
+        self.data.contains_key(key)
+    }
+
+    /// Unisce due oggetti (spread operator)
+    pub fn merge(mut self, other: Obj) -> Self {
+        for (k, v) in other.data {
+            self.data.insert(k, v);
+        }
+        self
+    }
+
+    /// Unisce per path (merge profondo)
+    pub fn merge_deep(mut self, other: Obj) -> Self {
+        for (k, v) in other.data {
+            match (self.data.remove(&k), v) {
+                (Some(Value::Obj(existing)), Value::Obj(new)) => {
+                    let merged = existing.merge_deep(new);
+                    self.data.insert(k, Value::Obj(merged));
+                }
+                (_, v) => {
+                    self.data.insert(k, v);
+                }
+            }
+        }
+        self
+    }
+
+    /// Restituisce il numero di campi
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    /// Verifica se è vuoto
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+
+    /// Restituisce tutte le chiavi
+    pub fn keys(&self) -> Vec<&str> {
+        self.data.keys().map(|s| s.as_str()).collect()
+    }
+
+    /// Restituisce tutti i valori
+    pub fn values(&self) -> Vec<&Value> {
+        self.data.values().collect()
+    }
 }
 
-/// Variante di `unwrap_or_else` per macro, evita borrow checker su closure complesse.
-#[macro_export]
-macro_rules! unwrap_or_else {
-    ($opt:expr, $default:expr) => {
-        match $opt {
-            Some(v) => v,
-            None => $default,
+impl From<HashMap<String, Value>> for Obj {
+    fn from(data: HashMap<String, Value>) -> Self {
+        Self { data }
+    }
+}
+
+impl From<Obj> for HashMap<String, Value> {
+    fn from(obj: Obj) -> Self {
+        obj.data
+    }
+}
+
+--$CHANGE===: core/obj/src/value.rs
+//! Valori che possono essere contenuti in un oggetto
+
+use std::fmt;
+use crate::obj::Obj;
+
+/// Valori supportati da Obj
+#[derive(Debug, Clone, PartialEq)]
+pub enum Value {
+    /// Valore nullo
+    Null,
+    /// Booleano
+    Bool(bool),
+    /// Numero (f64)
+    Number(f64),
+    /// Stringa
+    String(String),
+    /// Oggetto annidato
+    Obj(Obj),
+}
+
+impl Value {
+    /// Converte in Option<f64>
+    pub fn as_number(&self) -> Option<f64> {
+        match self {
+            Value::Number(n) => Some(*n),
+            _ => None,
         }
+    }
+
+    /// Converte in Option<bool>
+    pub fn as_bool(&self) -> Option<bool> {
+        match self {
+            Value::Bool(b) => Some(*b),
+            _ => None,
+        }
+    }
+
+    /// Converte in Option<&str>
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Value::String(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    /// Converte in Option<&Obj>
+    pub fn as_obj(&self) -> Option<&Obj> {
+        match self {
+            Value::Obj(obj) => Some(obj),
+            _ => None,
+        }
+    }
+
+    /// Converte in Option<Obj> (con consumo)
+    pub fn into_obj(self) -> Option<Obj> {
+        match self {
+            Value::Obj(obj) => Some(obj),
+            _ => None,
+        }
+    }
+
+    /// Verifica se è Null
+    pub fn is_null(&self) -> bool {
+        matches!(self, Value::Null)
+    }
+
+    /// Verifica se è un oggetto
+    pub fn is_obj(&self) -> bool {
+        matches!(self, Value::Obj(_))
+    }
+}
+
+impl Default for Value {
+    fn default() -> Self {
+        Value::Null
+    }
+}
+
+// Conversioni
+impl From<i32> for Value {
+    fn from(n: i32) -> Self {
+        Value::Number(n as f64)
+    }
+}
+
+impl From<f64> for Value {
+    fn from(n: f64) -> Self {
+        Value::Number(n)
+    }
+}
+
+impl From<bool> for Value {
+    fn from(b: bool) -> Self {
+        Value::Bool(b)
+    }
+}
+
+impl From<String> for Value {
+    fn from(s: String) -> Self {
+        Value::String(s)
+    }
+}
+
+impl From<&str> for Value {
+    fn from(s: &str) -> Self {
+        Value::String(s.to_string())
+    }
+}
+
+impl From<Obj> for Value {
+    fn from(obj: Obj) -> Self {
+        Value::Obj(obj)
+    }
+}
+
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Value::Null => write!(f, "null"),
+            Value::Bool(b) => write!(f, "{}", b),
+            Value::Number(n) => write!(f, "{}", n),
+            Value::String(s) => write!(f, "\"{}\"", s),
+            Value::Obj(obj) => write!(f, "{:?}", obj),
+        }
+    }
+}
+
+--$CHANGE===: core/obj/src/macros.rs
+//! Macro per creare oggetti con sintassi stile JavaScript
+
+/// Crea un oggetto Obj con sintassi stile JavaScript
+///
+/// # Esempi
+///
+/// ```
+/// use sapri_obj::obj;
+///
+/// // Oggetto semplice
+/// let person = obj! {
+///     name: "Alice",
+///     age: 30,
+///     active: true
+/// };
+///
+/// // Oggetto annidato
+/// let nested = obj! {
+///     a: 10,
+///     b: obj! {
+///         c: 20,
+///         d: 30
+///     }
+/// };
+///
+/// // Con ereditarietà (spread)
+/// let base = obj! { a: 10, b: 20 };
+/// let extended = obj! {
+///     using base,
+///     b: 30,
+///     c: 40
+/// };
+/// ```
+#[macro_export]
+macro_rules! obj {
+    // Oggetto vuoto
+    () => {
+        $crate::Obj::new()
     };
+
+    // Con ereditarietà (spread)
+    (using $parent:expr, $($key:ident : $value:expr),* $(,)?) => {{
+        let mut _obj = $parent.clone();
+        $(
+            _obj = _obj.set(stringify!($key), $value);
+        )*
+        _obj
+    }};
+
+    // Campi semplici
+    ($($key:ident : $value:expr),* $(,)?) => {{
+        let mut _obj = $crate::Obj::new();
+        $(
+            _obj = _obj.set(stringify!($key), $value);
+        )*
+        _obj
+    }};
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Obj;
+
+    #[test]
+    fn test_obj_empty() {
+        let obj = obj! {};
+        assert!(obj.is_empty());
+    }
+
+    #[test]
+    fn test_obj_simple() {
+        let obj = obj! {
+            a: 10,
+            b: 20.5,
+            c: "hello",
+            d: true
+        };
+
+        assert_eq!(obj.get("a").unwrap().as_number(), Some(10.0));
+        assert_eq!(obj.get("b").unwrap().as_number(), Some(20.5));
+        assert_eq!(obj.get("c").unwrap().as_str(), Some("hello"));
+        assert_eq!(obj.get("d").unwrap().as_bool(), Some(true));
+    }
+
+    #[test]
+    fn test_obj_nested() {
+        let obj = obj! {
+            a: 10,
+            b: obj! {
+                c: 20,
+                d: obj! {
+                    e: 30
+                }
+            }
+        };
+
+        assert_eq!(obj.get("a").unwrap().as_number(), Some(10.0));
+        
+        let b = obj.get("b").unwrap().as_obj().unwrap();
+        assert_eq!(b.get("c").unwrap().as_number(), Some(20.0));
+        
+        let d = b.get("d").unwrap().as_obj().unwrap();
+        assert_eq!(d.get("e").unwrap().as_number(), Some(30.0));
+    }
+
+    #[test]
+    fn test_obj_path_access() {
+        let obj = obj! {
+            a: 10,
+            b: obj! {
+                c: 20,
+                d: obj! {
+                    e: 30
+                }
+            }
+        };
+
+        assert_eq!(obj.get_path(&["b", "c"]).unwrap().as_number(), Some(20.0));
+        assert_eq!(obj.get_path(&["b", "d", "e"]).unwrap().as_number(), Some(30.0));
+        assert_eq!(obj.get_dot("b.c").unwrap().as_number(), Some(20.0));
+        assert_eq!(obj.get_dot("b.d.e").unwrap().as_number(), Some(30.0));
+    }
+
+    #[test]
+    fn test_obj_set_path() {
+        let obj = Obj::new()
+            .set_path(&["a", "b", "c"], 42);
+
+        assert_eq!(obj.get_dot("a.b.c").unwrap().as_number(), Some(42.0));
+    }
+
+    #[test]
+    fn test_obj_merge() {
+        let base = obj! {
+            a: 10,
+            b: 20
+        };
+
+        let extended = obj! {
+            using base,
+            b: 30,
+            c: 40
+        };
+
+        assert_eq!(extended.get("a").unwrap().as_number(), Some(10.0));
+        assert_eq!(extended.get("b").unwrap().as_number(), Some(30.0));
+        assert_eq!(extended.get("c").unwrap().as_number(), Some(40.0));
+    }
+
+    #[test]
+    fn test_obj_set_and_get() {
+        let obj = Obj::new()
+            .set("a", 10)
+            .set("b", "test")
+            .set("c", true);
+
+        assert_eq!(obj.get("a").unwrap().as_number(), Some(10.0));
+        assert_eq!(obj.get("b").unwrap().as_str(), Some("test"));
+        assert_eq!(obj.get("c").unwrap().as_bool(), Some(true));
+    }
+
+    #[test]
+    fn test_obj_remove() {
+        let obj = obj! { a: 10, b: 20 };
+        let obj = obj.remove("a");
+        assert!(!obj.contains("a"));
+        assert!(obj.contains("b"));
+    }
+
+    #[test]
+    fn test_obj_keys() {
+        let obj = obj! { a: 1, b: 2, c: 3 };
+        let mut keys: Vec<_> = obj.keys().into_iter().map(|s| s.to_string()).collect();
+        keys.sort();
+        assert_eq!(keys, vec!["a", "b", "c"]);
+    }
 }

@@ -1,5 +1,5 @@
 [package]
-name = "sapri_core_base"
+name = "sapri_base"
 version = "0.1.0"
 edition = "2021"
 description = "Primitive fondamentali, FP base e utility per Sapri"

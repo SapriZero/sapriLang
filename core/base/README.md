@@ -140,7 +140,7 @@ Esempi minimali, pronti per il copy-paste. Tutti i simboli sono esposti direttam
 ### 🔹 Gestione Errori (`error`)
 Alias tipato e varianti semantiche per le primitive di base.
 ```rust
-use sapri_core_base::{BaseError, Result};
+use sapri_base::{BaseError, Result};
 
 fn divide(a: i32, b: i32) -> Result<i32> {
     if b == 0 {
@@ -161,8 +161,8 @@ match divide(10, 0) {
 ### 🔹 Stato Atomico (`atom` & `atom_impl`)
 Valori lazy che risolvono il loro contenuto solo quando necessario. Ideale per configurazioni differite, cache o dati esterni.
 ```rust
-use sapri_core_base::{Atom};
-use sapri_core_base::atom_impl::PromiseState; // Trait necessario per .resolve()
+use sapri_base::{Atom};
+use sapri_base::atom_impl::PromiseState; // Trait necessario per .resolve()
 
 let mut config = Atom::<String>::pending();
 assert!(!config.is_ready());
@@ -180,7 +180,7 @@ assert_eq!(external.source(), Some("s3://bucket/config.json"));
 ### 🔹 Macro Funzionali (`fp` & `macros`)
 Zero overhead a runtime. Espansione a compile-time, type-safe e composabili.
 ```rust
-use sapri_core_base::{eval, mask, curry, try_or};
+use sapri_base::{eval, mask, curry, try_or};
 
 // eval! → Valutazione condizionale con short-circuit
 let x = eval!(true, 10 + 5, panic!("Non eseguito"));
@@ -204,7 +204,7 @@ assert_eq!(fallback, -1);
 ### 🔹 Ordinamento Ultra-Rapido (`bucket/sort`)
 Counting sort ottimizzato per slice native. Complessità `O(n + k)`, zero allocazioni extra.
 ```rust
-use sapri_core_base::bucket::{counting_sort_u8, counting_sort_u16};
+use sapri_base::bucket::{counting_sort_u8, counting_sort_u16};
 
 // u8 (0-255)
 let mut data_u8 = [5u8, 2, 8, 1, 9, 3, 7, 4, 6, 0];
@@ -222,7 +222,7 @@ counting_sort_u8(&mut empty); // Panic-free, zero operazioni
 ```
 
 ### 🔗 Note sull'uso nei progetti reali
-- Le macro `eval!`, `mask!`, ecc. **non richiedono `use` esplicito** se il crate è nella `Cargo.toml`, ma è buona pratica importarle per chiarezza: `use sapri_core_base::eval;`
+- Le macro `eval!`, `mask!`, ecc. **non richiedono `use` esplicito** se il crate è nella `Cargo.toml`, ma è buona pratica importarle per chiarezza: `use sapri_base::eval;`
 - `Atom` è `Clone` e `Send + Sync` se `T` lo è: puoi passarlo tra thread o memorizzarlo in cache.
 - `counting_sort` modifica la slice **in-place**. Per ordinamenti stabili con payload complessi, usa `sapri-core-extended::bucket::sort::counting_sort_u16_stable`.
 
