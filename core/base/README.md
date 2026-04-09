@@ -118,38 +118,126 @@ Sapri è progettato come un'architettura a strati (**Layered Architecture**). Og
 - 🎯 **IDE-Friendly**: `rust-analyzer` indicizza meglio i crate piccoli e focalizzati. L'autocomplete rimane reattivo anche in workspace con centinaia di file.
 
 
+### 💡 Perché abbiamo diviso in crate? (Il "Perché" Architecturale)
+La scelta di non creare un unico `core` monolitico nasce da limiti concreti del compiler Rust e dalla necessità di mantenere un ciclo di sviluppo veloce:
 
+| Problema del Monolite | Soluzione Layered |
+|----------------------|-------------------|
+| 🐢 **Compile-time esplosivo**: modificare il parser `.sson` o aggiungere una `proc-macro` costringe a ricompilare anche algoritmi e primitive di base. | ⚡ **Compilazione incrementale**: `base` compila in <2s. Cambiare `extended` o `sson` non tocca il layer fondamentale. |
+| 🔗 **Dipendenze nascoste**: `serde`, `tokio` o `syn` vengono tirati in anche da chi usa solo `counting_sort` o `eval!`. | 🧼 **Confini espliciti**: il compiler garantisce che `base` importi solo `std` e crate leggeri. Zero dipendenze transitive indesiderate. |
+| 🧪 **Test lenti e fragili**: i test unitari devono inizializzare runtime, mockare I/O o parsare stringhe complesse. | 🎯 **Testing isolato**: i test di `base` sono puri, deterministici e girano in millisecondi. CI più veloce, feedback immediato. |
+| 🔄 **Release bloccate**: non puoi pubblicare una fix al sort o agli errori finché il parser `.sson` non è stabile. | 📦 **Versioning indipendente**: `base`, `extended` e `sson` possono avere cicli di release separati e essere pubblicati su crates.io in momenti diversi. |
+| 🖥️ **IDE pesante**: `rust-analyzer` fatica a indicizzare crate con 10k+ LOC, macro procedurali e dipendenze complesse. | 🚀 **Developer Experience**: crate piccoli e focalizzati → autocomplete istantaneo, refactoring sicuro, onboarding semplificato. |
 
+> 📌 **Regola d'oro**: ogni crate deve avere un **dominio chiaro**, **dipendenze minime** e **zero responsabilità trasversali**. Se un modulo inizia a usare `serde` o I/O, esce da `base` e va in `extended`.
 
+---
 
+## 📖 4. API di Riferimento (Core)
 
+Esempi minimali, pronti per il copy-paste. Tutti i simboli sono esposti direttamente alla radice del crate grazie a `#[macro_export]` e `pub use`.
 
-	
-Diagramma testuale base → extended → sson → app, regole di dipendenza
-	
-Spiega il "perché" della suddivisione in crate
-4. 📖 API di Riferimento (Core)
-	
-Esempi minimi per atom, fp/macros, bucket, error
-	
-Documentazione viva, copy-paste ready
-5. 🧪 Esempi Pratici & Pattern
-	
-Casi d'uso reali: stato lazy, valutazione condizionale, ordinamento bucket
-	
-Mostra il valore concreto della libreria
-6. 🔗 Integrazione con Extended & SSON
-	
-Come base si collega al parser .sson e alla generazione struct
-	
-Ponte verso il resto del progetto
-7. 🛠️ Sviluppo & Workflow
-	
-Test, clippy, benchmark, regole di commit, come aggiungere moduli
-	
-Manutenzione a lungo termine
-8. 📜 Licenza & Crediti
-	
-MIT, autori, link a repo correlati
-	
-Chiusura professionale
+### 🔹 Gestione Errori (`error`)
+Alias tipato e varianti semantiche per le primitive di base.
+```rust
+use sapri_core_base::{BaseError, Result};
+
+fn divide(a: i32, b: i32) -> Result<i32> {
+    if b == 0 {
+        Err(BaseError::InvalidArg { msg: "division by zero".into() })
+    } else {
+        Ok(a / b)
+    }
+}
+
+// Utilizzo ergonomico con `?` o pattern matching
+match divide(10, 0) {
+    Ok(v) => println!("Risultato: {v}"),
+    Err(BaseError::InvalidArg { msg }) => eprintln!("Errore valido: {msg}"),
+    _ => {}
+}
+```
+
+### 🔹 Stato Atomico (`atom` & `atom_impl`)
+Valori lazy che risolvono il loro contenuto solo quando necessario. Ideale per configurazioni differite, cache o dati esterni.
+```rust
+use sapri_core_base::{Atom};
+use sapri_core_base::atom_impl::PromiseState; // Trait necessario per .resolve()
+
+let mut config = Atom::<String>::pending();
+assert!(!config.is_ready());
+
+// Risoluzione differita
+config = config.resolve("db_host=127.0.0.1".into());
+assert!(config.is_ready());
+assert_eq!(config.get(), "db_host=127.0.0.1");
+
+// Creazione da sorgente esterna
+let external = Atom::<Vec<u8>>::external("s3://bucket/config.json");
+assert_eq!(external.source(), Some("s3://bucket/config.json"));
+```
+
+### 🔹 Macro Funzionali (`fp` & `macros`)
+Zero overhead a runtime. Espansione a compile-time, type-safe e composabili.
+```rust
+use sapri_core_base::{eval, mask, curry, try_or};
+
+// eval! → Valutazione condizionale con short-circuit
+let x = eval!(true, 10 + 5, panic!("Non eseguito"));
+assert_eq!(x, 15);
+
+// mask! → Trasformazione applicata solo se il predicato è vero
+let value = mask!(42, |&v| v > 10, |v| v * 2);
+assert_eq!(value, 84);
+
+// curry! → Applica parzialmente una funzione a 2 argomenti
+fn add(a: i32, b: i32) -> i32 { a + b }
+let add_10 = curry!(add)(10);
+assert_eq!(add_10(5), 15);
+
+// try_or! → Fallback ergonomico su Result
+let res: Result<i32, _> = Err(BaseError::NotFound { path: "key".into() });
+let fallback = try_or!(res, -1);
+assert_eq!(fallback, -1);
+```
+
+### 🔹 Ordinamento Ultra-Rapido (`bucket/sort`)
+Counting sort ottimizzato per slice native. Complessità `O(n + k)`, zero allocazioni extra.
+```rust
+use sapri_core_base::bucket::{counting_sort_u8, counting_sort_u16};
+
+// u8 (0-255)
+let mut data_u8 = [5u8, 2, 8, 1, 9, 3, 7, 4, 6, 0];
+counting_sort_u8(&mut data_u8);
+assert_eq!(data_u8, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+
+// u16 (0-65535)
+let mut data_u16 = [300u16, 100, 400, 50, 200];
+counting_sort_u16(&mut data_u16);
+assert_eq!(data_u16, [50, 100, 200, 300, 400]);
+
+// ✅ Sicuro anche con slice vuote o già ordinate
+let mut empty: [u8; 0] = [];
+counting_sort_u8(&mut empty); // Panic-free, zero operazioni
+```
+
+### 🔗 Note sull'uso nei progetti reali
+- Le macro `eval!`, `mask!`, ecc. **non richiedono `use` esplicito** se il crate è nella `Cargo.toml`, ma è buona pratica importarle per chiarezza: `use sapri_core_base::eval;`
+- `Atom` è `Clone` e `Send + Sync` se `T` lo è: puoi passarlo tra thread o memorizzarlo in cache.
+- `counting_sort` modifica la slice **in-place**. Per ordinamenti stabili con payload complessi, usa `sapri-core-extended::bucket::sort::counting_sort_u16_stable`.
+
+---
+```
+
+### 🔜 Prossimo passo
+Ora hai:
+✅ **Sezione 1**: Intro + Filosofia + Tabella moduli  
+✅ **Sezione 2**: Installazione + Workspace + Comandi  
+✅ **Sezione 3**: Architettura Layered + Diagramma + **Perché la divisione**  
+✅ **Sezione 4**: API Reference con esempi compilabili  
+
+Vuoi che prepariamo:
+🔹 **Sezione 5: 🧪 Pattern & Casi d'Uso Reali** → Come si integra `.sson` → struct generation, validazione `S`, flussi CRUD dichiarativi?  
+🔹 **Sezione 6: 🛠️ Workflow di Sviluppo** → Test, clippy, benchmark, come aggiungere un nuovo modulo rispettando i confini?  
+
+Dimmi quale numero vuoi chiudere per avere un README **pronto alla pubblicazione**. 🦀📖
