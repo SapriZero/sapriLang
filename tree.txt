@@ -64,65 +64,89 @@
 │   ├── pyproject.toml
 │   └── README.md
 ├── core
-│   ├── src
-│   │   ├── bucket
-│   │   │   ├── array.rs
-│   │   │   ├── mod.rs
-│   │   │   ├── mod.rs (aggiornato)
-│   │   │   ├── sort.rs
-│   │   │   └── strategy.rs
-│   │   ├── core
+│   ├── base
+│   │   ├── src
+│   │   │   ├── bucket
+│   │   │   │   ├── array.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   └── sort.rs
+│   │   │   ├── macros
+│   │   │   │   ├── error.rs
+│   │   │   │   ├── eval.rs
+│   │   │   │   ├── fp.rs
+│   │   │   │   └── mod.rs
 │   │   │   ├── atom_impl.rs
 │   │   │   ├── atom.rs
-│   │   │   ├── context.rs
-│   │   │   ├── eval.rs
-│   │   │   ├── mod.rs
-│   │   │   └── reactive.rs
-│   │   ├── definition
-│   │   │   └── registry.rs
-│   │   ├── io
-│   │   │   ├── console.rs
-│   │   │   ├── file.rs
-│   │   │   ├── http.rs
-│   │   │   ├── memory.rs
-│   │   │   └── mod.rs
-│   │   ├── macros
-│   │   │   ├── cascade.rs
-│   │   │   ├── mod.rs
-│   │   │   ├── obj.rs
-│   │   │   ├── path.rs
-│   │   │   ├── reactive.rs
-│   │   │   └── struct_with_keys.rs
-│   │   ├── sson
-│   │   │   ├── ast.rs
 │   │   │   ├── error.rs
-│   │   │   ├── mod.rs
-│   │   │   ├── parser.rs
-│   │   │   └── token.rs
-│   │   ├── web
-│   │   │   ├── controller.rs
-│   │   │   ├── dto.rs
-│   │   │   ├── middleware.rs
-│   │   │   ├── mod.rs
-│   │   │   ├── router.rs
-│   │   │   └── server.rs
-│   │   ├── crud.rs
-│   │   ├── fp.rs
-│   │   ├── lib.rs
-│   │   ├── lib.rs (aggiungi)
-│   │   ├── lib.rs (aggiungi alla fine, prima delle definizioni esistenti)
-│   │   ├── obj.rs
-│   │   └── scanner.rs
-│   ├── tests
-│   │   └── test_macros.rs
-│   ├── all.pack.txt
-│   ├── all.txt
-│   ├── Cargo.lock
-│   ├── Cargo.toml
-│   ├── Cargo.toml2
-│   ├── Cargo.toml (aggiungi dipendenze)
-│   ├── README.md
-│   └── unpack.sh
+│   │   │   ├── fp.rs
+│   │   │   ├── lib.rs
+│   │   │   └── schema.rs
+│   │   ├── Cargo.lock
+│   │   ├── Cargo.toml
+│   │   ├── README.md
+│   │   └── README.old.md
+│   ├── core
+│   ├── extended
+│   │   └── src
+│   │       ├── context.rs
+│   │       └── eval.rs
+│   ├── old
+│   │   ├── src
+│   │   │   ├── bucket
+│   │   │   │   ├── array.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── mod.rs (aggiornato)
+│   │   │   │   ├── sort.rs
+│   │   │   │   └── strategy.rs
+│   │   │   ├── core
+│   │   │   │   ├── atom_impl.rs
+│   │   │   │   ├── atom.rs
+│   │   │   │   ├── context.rs
+│   │   │   │   ├── eval.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   └── reactive.rs
+│   │   │   ├── definition
+│   │   │   │   └── registry.rs
+│   │   │   ├── io
+│   │   │   │   ├── console.rs
+│   │   │   │   ├── file.rs
+│   │   │   │   ├── http.rs
+│   │   │   │   ├── memory.rs
+│   │   │   │   └── mod.rs
+│   │   │   ├── macros
+│   │   │   │   ├── cascade.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── obj.rs
+│   │   │   │   ├── reactive.rs
+│   │   │   │   └── struct_with_keys.rs
+│   │   │   ├── sson
+│   │   │   │   ├── ast.rs
+│   │   │   │   ├── dict.rs
+│   │   │   │   ├── error.rs
+│   │   │   │   ├── lexer.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── parser.rs
+│   │   │   │   ├── token.rs
+│   │   │   │   └── validator.rs
+│   │   │   ├── web
+│   │   │   │   ├── controller.rs
+│   │   │   │   ├── dto.rs
+│   │   │   │   ├── middleware.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── router.rs
+│   │   │   │   └── server.rs
+│   │   │   ├── crud.rs
+│   │   │   ├── fp.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── lib.rs (aggiungi)
+│   │   │   ├── lib.rs (aggiungi alla fine, prima delle definizioni esistenti)
+│   │   │   ├── obj.rs
+│   │   │   └── scanner.rs
+│   │   ├── tests
+│   │   │   └── test_macros.rs
+│   │   ├── Cargo.toml
+│   │   └── README.md
+│   └── sson
 ├── core-data
 │   ├── src
 │   │   ├── flatten
@@ -189,6 +213,16 @@
 │   └── Cargo.toml
 ├── scripts
 │   └── chat_full_2026-03-12T05-06-48.sapri
+├── sson
+│   ├── src
+│   │   ├── ast.rs
+│   │   ├── dict.rs
+│   │   ├── error.rs
+│   │   ├── lib.rs
+│   │   ├── main.rs
+│   │   ├── parser.rs
+│   │   └── token.rs
+│   └── Cargo.toml
 ├── static
 │   ├── script.js (opzionale, vuoto per ora)
 │   └── style.css (opzionale, vuoto per ora)
@@ -238,4 +272,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-51 directories, 188 files
+62 directories, 211 files
