@@ -1,13 +1,14 @@
 //! Valori che possono essere contenuti in un atomo nel DSL
 
 use std::ops::Mul;
+use sapri_obj::Obj;  // nuova dipendenza
 
-/// Tipi di valori supportati dal DSL
 #[derive(Debug, Clone, PartialEq)]
 pub enum AtomValue {
     Number(f64),
     String(String),
     Bool(bool),
+    Obj(Obj),  // nuova!
 }
 
 impl AtomValue {
@@ -34,6 +35,20 @@ impl AtomValue {
             _ => None,
         }
     }
+    
+    pub fn as_obj(&self) -> Option<&Obj> {
+        match self {
+            AtomValue::Obj(obj) => Some(obj),
+            _ => None,
+        }
+    }
+    
+    pub fn into_obj(self) -> Option<Obj> {
+        match self {
+            AtomValue::Obj(obj) => Some(obj),
+            _ => None,
+        }
+    }
 }
 
 // Moltiplicazione: solo per Number * Number → Number
@@ -46,6 +61,13 @@ impl Mul for AtomValue {
             (AtomValue::Number(a), AtomValue::Number(b)) => AtomValue::Number(a * b),
             _ => AtomValue::Number(0.0), // per ora, in futuro errore
         }
+    }
+}
+
+// Conversioni
+impl From<Obj> for AtomValue {
+    fn from(obj: Obj) -> Self {
+        AtomValue::Obj(obj)
     }
 }
 

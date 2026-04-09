@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 sapri_base = { path = "../base", version = "0.1" }
+sapri_obj = { path = "../obj", version = "0.1" }  # nuova
 regex = "1.0"
 once_cell = "1.19"
 

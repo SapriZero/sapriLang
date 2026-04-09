@@ -61,3 +61,36 @@ fn test_context_shadowing() {
     assert_eq!(inner.get_value("z").unwrap().as_number(), Some(300.0));
     assert_eq!(outer.get_value("x").unwrap().as_number(), Some(10.0));
 }
+
+#[test]
+fn test_obj_in_context() {
+    use sapri_obj::obj;
+    
+    let inner = obj! { x: 10, y: 20 };
+    
+    let ctx = define! {
+        a = 5;
+        obj = inner;
+    };
+    
+    // Metodo 1: into_obj() consuma il valore
+    let retrieved = ctx.get_value("obj").unwrap().into_obj().unwrap();
+    assert_eq!(retrieved.get("x").unwrap().as_number(), Some(10.0));
+    assert_eq!(retrieved.get("y").unwrap().as_number(), Some(20.0));
+}
+
+#[test]
+fn test_obj_method_2() {
+    use sapri_obj::obj;
+    
+    let inner = obj! { x: 10, y: 20 };
+    
+    let ctx = define! {
+        obj = inner;
+    };
+    
+    // Metodo 2: bind temporaneo
+    let value = ctx.get_value("obj").unwrap();
+    let retrieved = value.as_obj().unwrap();
+    assert_eq!(retrieved.get("x").unwrap().as_number(), Some(10.0));
+}
