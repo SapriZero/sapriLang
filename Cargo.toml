@@ -8,6 +8,7 @@ members = [
 "editor-server",
 "core-data",
 "sson",
+"code_gen",
 "ai",
 "tools/sson-gen",
 ]

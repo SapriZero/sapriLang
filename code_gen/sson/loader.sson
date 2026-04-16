@@ -1,0 +1,6 @@
+# Lista dei file `.sson` da generare
+
+[load]
+input_dir_s: "ai"
+extensions_l: "sson"
+recursive_b: true

@@ -1,0 +1,32 @@
+# Configurazione per code_gen
+# Estende la configurazione di core
+
+[generator]
+name_s: "sapri-code-gen"
+version_s: "0.1.0"
+
+[generator.paths]
+input_dir_s: "code_gen/sson"
+output_dir_s: "code_gen/src/generated"
+templates_dir_s: "code_gen/src/templates"
+
+[generator.options]
+overwrite_b: false
+backup_b: true
+format_code_b: true
+
+[generator.mapping]
+[.primitives]
+s: "String"
+n: "f64"
+b: "bool"
+d: "chrono::DateTime<chrono::Utc>"
+t: "String"
+p: "std::path::PathBuf"
+e: "String"
+r: "T"
+
+[.containers]
+Vec: "std::collections::VecDeque<{}>"
+HashMap: "std::collections::HashMap<{}, {}>"
+Option: "Option<{}>"

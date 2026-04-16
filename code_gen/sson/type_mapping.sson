@@ -1,0 +1,6 @@
+[mapping.primitives]
+s: "String"
+n: "f64"
+b: "bool"
+usize: "usize"
+u64: "u64"

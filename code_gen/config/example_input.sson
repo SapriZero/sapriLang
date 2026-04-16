@@ -1,0 +1,83 @@
+# Esempio: definizione di HolographicMemory
+
+[struct.HolographicMemory]
+description_s: "Memoria olografica che salva solo variazioni"
+
+[struct.HolographicMemory.derive]
+traits_l: "Debug", "Clone", "Default"
+
+[struct.HolographicMemory.fields]
+[.entries]
+type_e: r
+ref_s: "VecDeque<MemoryEntry>"
+default_s: "VecDeque::new()"
+
+[.max_size]
+type_e: n
+default_n: 100
+constraints_l: _:min=1, _:max=10000
+
+[struct.MemoryEntry]
+derive_l: "Debug", "Clone"
+
+[struct.MemoryEntry.fields]
+[.timestamp]
+type_e: n
+required_b: true
+
+[.input]
+type_e: s
+required_b: true
+
+[.response]
+type_e: s
+required_b: true
+
+[impl.HolographicMemory]
+impl_for_s: "HolographicMemory"
+
+[impl.HolographicMemory.new]
+return_s: "Self"
+body_s: |
+    Self {
+        entries: VecDeque::new(),
+        max_size: 100,
+    }
+
+[impl.HolographicMemory.with_max_size]
+params_l: "max_size: usize"
+return_s: "Self"
+body_s: |
+    Self {
+        entries: VecDeque::new(),
+        max_size,
+    }
+
+[impl.HolographicMemory.remember]
+params_l: "&mut self, input: &str, response: &str"
+return_s: "()"
+body_s: |
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let entry = MemoryEntry {
+        timestamp,
+        input: input.to_string(),
+        response: response.to_string(),
+    };
+    self.entries.push_back(entry);
+    while self.entries.len() > self.max_size {
+        self.entries.pop_front();
+    }
+
+[impl.HolographicMemory.recall]
+params_l: "&self, input: &str"
+return_s: "Option<String>"
+body_s: |
+    for entry in self.entries.iter().rev() {
+        if entry.input == input {
+            return Some(entry.response.clone());
+        }
+    }
+    None

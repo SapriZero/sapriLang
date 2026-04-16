@@ -1,0 +1,55 @@
+# Mapping tra tipi .sson e tipi Rust
+
+[types]
+[.s]
+name_s: "String"
+default_s: "String::new()"
+
+[.n]
+name_s: "f64"
+default_s: "0.0"
+
+[.b]
+name_s: "bool"
+default_s: "false"
+
+[.d]
+name_s: "chrono::DateTime<chrono::Utc>"
+default_s: "chrono::Utc::now()"
+
+[.t]
+name_s: "String"
+default_s: "String::new()"
+
+[.p]
+name_s: "std::path::PathBuf"
+default_s: "std::path::PathBuf::new()"
+
+[.e]
+name_s: "String"
+default_s: "String::new()"
+
+[.r]
+name_s: "T"
+default_s: "Default::default()"
+
+[.*]
+name_s: "serde_json::Value"
+default_s: "serde_json::Value::Null"
+
+[containers]
+[.Vec]
+pattern_s: "_:ref[Vec<T>]"
+rust_s: "Vec<{}>"
+
+[.VecDeque]
+pattern_s: "_:ref[VecDeque<T>]"
+rust_s: "std::collections::VecDeque<{}>"
+
+[.HashMap]
+pattern_s: "_:ref[HashMap<K,V>]"
+rust_s: "std::collections::HashMap<{}, {}>"
+
+[.Option]
+pattern_s: "_:opt"
+rust_s: "Option<{}>"

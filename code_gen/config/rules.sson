@@ -1,0 +1,41 @@
+# Regole di generazione per le struct
+
+[rules.struct]
+pattern_s: "[struct.{}]"
+generates_s: "struct"
+
+[rules.struct.fields]
+pattern_s: "[struct.{}.fields]"
+generates_s: "struct_fields"
+
+[rules.enum]
+pattern_s: "[enum.{}]"
+generates_s: "enum"
+
+[rules.enum.variants]
+pattern_s: "[enum.{}.variants]"
+generates_s: "enum_variants"
+
+[rules.impl]
+pattern_s: "[impl.{}]"
+generates_s: "impl"
+
+[rules.impl.function]
+pattern_s: "[impl.{}.{}]"
+generates_s: "impl_function"
+
+[rules.trait]
+pattern_s: "[trait.{}]"
+generates_s: "trait"
+
+[rules.trait.method]
+pattern_s: "[trait.{}.{}]"
+generates_s: "trait_method"
+
+[rules.type_alias]
+pattern_s: "[type.{}]"
+generates_s: "type_alias"
+
+[rules.const]
+pattern_s: "[const.{}]"
+generates_s: "const"

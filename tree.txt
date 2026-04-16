@@ -1,5 +1,12 @@
 .
 ├── ai
+│   ├── config
+│   │   ├── config.sson
+│   │   ├── knowledge.sson
+│   │   ├── load.sson
+│   │   ├── memory.sson
+│   │   ├── response_templates.sson
+│   │   └── validators.sson
 │   ├── data
 │   │   ├── italiano_2_4_2007_09_01
 │   │   │   ├── it_IT.aff
@@ -17,51 +24,93 @@
 │   │   ├── wikipedia_words_clean.txt
 │   │   └── wikipedia_words.txt
 │   ├── scripts
-│   │   ├── __pycache__
-│   │   │   └── build_dictionary.cpython-312.pyc
-│   │   ├── build_dictionary.py
-│   │   ├── build_final_dictionary.py
-│   │   ├── clean_wikipedia_words.py
-│   │   └── extract_words_from_wikipedia.py
+│   │   ├── scripts
+│   │   │   ├── __pycache__
+│   │   │   │   └── build_dictionary.cpython-312.pyc
+│   │   │   ├── build_dictionary.py
+│   │   │   ├── build_final_dictionary.py
+│   │   │   ├── clean_wikipedia_words.py
+│   │   │   └── extract_words_from_wikipedia.py
+│   │   ├── src
+│   │   │   ├── ai.egg-info
+│   │   │   │   ├── dependency_links.txt
+│   │   │   │   ├── PKG-INFO
+│   │   │   │   ├── SOURCES.txt
+│   │   │   │   └── top_level.txt
+│   │   │   ├── core
+│   │   │   │   ├── __pycache__
+│   │   │   │   │   ├── atom.cpython-312.pyc
+│   │   │   │   │   ├── equilibrium.cpython-312.pyc
+│   │   │   │   │   ├── graph.cpython-312.pyc
+│   │   │   │   │   ├── __init__.cpython-312.pyc
+│   │   │   │   │   └── relation.cpython-312.pyc
+│   │   │   │   ├── atom.py
+│   │   │   │   ├── equilibrium.py
+│   │   │   │   ├── graph.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   └── relation.py
+│   │   │   ├── nlp
+│   │   │   │   ├── __pycache__
+│   │   │   │   │   ├── brain.cpython-312.pyc
+│   │   │   │   │   ├── dictionary.cpython-312.pyc
+│   │   │   │   │   ├── dictionary_loader.cpython-312.pyc
+│   │   │   │   │   ├── __init__.cpython-312.pyc
+│   │   │   │   │   ├── meaning.cpython-312.pyc
+│   │   │   │   │   ├── parser.cpython-312.pyc
+│   │   │   │   │   ├── responder.cpython-312.pyc
+│   │   │   │   │   └── tokenizer.cpython-312.pyc
+│   │   │   │   ├── brain.py
+│   │   │   │   ├── dictionary_builder.py
+│   │   │   │   ├── dictionary_loader.py
+│   │   │   │   ├── dictionary.py
+│   │   │   │   ├── __init__.py
+│   │   │   │   ├── meaning.py
+│   │   │   │   ├── parser.py
+│   │   │   │   ├── responder.py
+│   │   │   │   └── tokenizer.py
+│   │   │   └── urcm_nlp.py
+│   │   └── pyproject.toml
 │   ├── src
-│   │   ├── ai.egg-info
-│   │   │   ├── dependency_links.txt
-│   │   │   ├── PKG-INFO
-│   │   │   ├── SOURCES.txt
-│   │   │   └── top_level.txt
-│   │   ├── core
-│   │   │   ├── __pycache__
-│   │   │   │   ├── atom.cpython-312.pyc
-│   │   │   │   ├── equilibrium.cpython-312.pyc
-│   │   │   │   ├── graph.cpython-312.pyc
-│   │   │   │   ├── __init__.cpython-312.pyc
-│   │   │   │   └── relation.cpython-312.pyc
-│   │   │   ├── atom.py
-│   │   │   ├── equilibrium.py
-│   │   │   ├── graph.py
-│   │   │   ├── __init__.py
-│   │   │   └── relation.py
-│   │   ├── nlp
-│   │   │   ├── __pycache__
-│   │   │   │   ├── brain.cpython-312.pyc
-│   │   │   │   ├── dictionary.cpython-312.pyc
-│   │   │   │   ├── dictionary_loader.cpython-312.pyc
-│   │   │   │   ├── __init__.cpython-312.pyc
-│   │   │   │   ├── meaning.cpython-312.pyc
-│   │   │   │   ├── parser.cpython-312.pyc
-│   │   │   │   ├── responder.cpython-312.pyc
-│   │   │   │   └── tokenizer.cpython-312.pyc
-│   │   │   ├── brain.py
-│   │   │   ├── dictionary_builder.py
-│   │   │   ├── dictionary_loader.py
-│   │   │   ├── dictionary.py
-│   │   │   ├── __init__.py
-│   │   │   ├── meaning.py
-│   │   │   ├── parser.py
-│   │   │   ├── responder.py
-│   │   │   └── tokenizer.py
-│   │   └── urcm_nlp.py
-│   ├── pyproject.toml
+│   │   ├── knowledge.rs
+│   │   ├── load.rs
+│   │   ├── memory.rs
+│   │   ├── response_templates.rs
+│   │   └── validators.rs
+│   ├── src1
+│   │   ├── brain.rs
+│   │   ├── conversation.rs
+│   │   ├── knowledge.rs
+│   │   ├── learning.rs
+│   │   ├── lib.rs
+│   │   ├── main.rs
+│   │   └── memory.rs
+│   ├── ai_speack.md
+│   ├── Cargo.toml
+│   ├── loader.sson
+│   ├── pippo
+│   └── README.md
+├── code_gen
+│   ├── config
+│   │   ├── config.sson
+│   │   ├── example_input.sson
+│   │   ├── rules.sson
+│   │   └── types.sson
+│   ├── src
+│   │   ├── config.rs
+│   │   ├── engine.rs
+│   │   ├── generator.rs
+│   │   ├── handler.rs
+│   │   ├── main.rs
+│   │   └── registry.rs
+│   ├── sson
+│   │   ├── config.sson
+│   │   ├── grammar.sson
+│   │   ├── loader.sson
+│   │   ├── memory.sson
+│   │   ├── rules.sson
+│   │   ├── templates.sson
+│   │   └── type_mapping.sson
+│   ├── Cargo.toml
 │   └── README.md
 ├── core
 │   ├── base
@@ -349,10 +398,11 @@
 ├── gitignore
 ├── pack.txt
 ├── README.md
+├── sapri-code-gen
 ├── TODO.md
 ├── tree.sh
 ├── tree.txt
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-73 directories, 283 files
+81 directories, 325 files

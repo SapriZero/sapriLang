@@ -1,0 +1,7 @@
+[generator]
+name_s: "sapri-code-gen"
+version_s: "0.1.0"
+
+[generator.options]
+verbose_b: true
+overwrite_b: true

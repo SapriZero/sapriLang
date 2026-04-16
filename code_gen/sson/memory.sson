@@ -1,0 +1,117 @@
+# Specifica della struttura HolographicMemory
+# Questo file definisce COSA generare, non COME generare
+
+[struct.HolographicMemory]
+description_s: "Memoria olografica che salva solo variazioni"
+
+[struct.HolographicMemory.derive]
+traits_l: "Debug", "Clone", "Default"
+
+[struct.HolographicMemory.fields]
+[.entries]
+type_s: "VecDeque<MemoryEntry>"
+default_s: "VecDeque::new()"
+comment_s: "Coda circolare degli eventi"
+
+[.max_size]
+type_s: "usize"
+default_s: "100"
+comment_s: "Dimensione massima della memoria"
+
+[struct.MemoryEntry]
+derive_l: "Debug", "Clone"
+
+[struct.MemoryEntry.fields]
+[.timestamp]
+type_s: "u64"
+comment_s: "Timestamp Unix dell'evento"
+
+[.input]
+type_s: "String"
+comment_s: "Input dell'utente"
+
+[.response]
+type_s: "String"
+comment_s: "Risposta dell'AI"
+
+[impl.HolographicMemory]
+impl_for_s: "HolographicMemory"
+
+[impl.HolographicMemory.new]
+return_s: "Self"
+is_static_b: true
+body_s: |
+    Self {
+        entries: VecDeque::new(),
+        max_size: 100,
+    }
+
+[impl.HolographicMemory.with_max_size]
+params_l: "max_size: usize"
+return_s: "Self"
+is_static_b: true
+body_s: |
+    Self {
+        entries: VecDeque::new(),
+        max_size,
+    }
+
+[impl.HolographicMemory.remember]
+params_l: "&mut self, input: &str, response: &str"
+return_s: "()"
+body_s: |
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let entry = MemoryEntry {
+        timestamp,
+        input: input.to_string(),
+        response: response.to_string(),
+    };
+    self.entries.push_back(entry);
+    while self.entries.len() > self.max_size {
+        self.entries.pop_front();
+    }
+
+[impl.HolographicMemory.recall]
+params_l: "&self, input: &str"
+return_s: "Option<String>"
+body_s: |
+    for entry in self.entries.iter().rev() {
+        if entry.input == input {
+            return Some(entry.response.clone());
+        }
+    }
+    None
+
+[impl.HolographicMemory.recent]
+params_l: "&self, n: usize"
+return_s: "Vec<&MemoryEntry>"
+body_s: |
+    self.entries.iter().rev().take(n).collect()
+
+[impl.HolographicMemory.save]
+params_l: "&self, path: &str"
+return_s: "Result<(), String>"
+body_s: |
+    let mut content = String::new();
+    content.push_str("# Holographic Memory\n\n");
+    for entry in &self.entries {
+        content.push_str(&format!(
+            "[entry_{}]\ntimestamp: {}\ninput: {}\nresponse: {}\n",
+            entry.timestamp, entry.timestamp, entry.input, entry.response
+        ));
+        content.push('\n');
+    }
+    std::fs::write(path, content).map_err(|e| e.to_string())
+
+[impl.HolographicMemory.len]
+params_l: "&self"
+return_s: "usize"
+body_s: "self.entries.len()"
+
+[impl.HolographicMemory.is_empty]
+params_l: "&self"
+return_s: "bool"
+body_s: "self.entries.is_empty()"

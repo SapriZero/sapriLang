@@ -1,0 +1,14 @@
+[rules.struct]
+template_s: "#[derive({derive})]\npub struct {name} {{\n{fields}\n}}\n"
+
+[rules.struct.field]
+template_s: "    pub {name}: {type_},\n"
+
+[rules.enum]
+template_s: "#[derive({derive})]\npub enum {name} {{\n{variants}\n}}\n"
+
+[rules.impl]
+template_s: "impl {name} {{\n{functions}\n}}\n"
+
+[rules.impl.function]
+template_s: "    pub {static_keyword}fn {name}({params}) -> {return_type} {{\n        todo!()\n    }}\n"

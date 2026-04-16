@@ -1,0 +1,14 @@
+[package]
+name = "sapri_code_gen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_core = { path = "../core/core" }
+regex = "1.10"
+walkdir = "2.5"
+chrono = "0.4"
+
+[[bin]]
+name = "sapri-code-gen"
+path = "src/main.rs"
