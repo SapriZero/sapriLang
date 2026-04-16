@@ -69,7 +69,8 @@
 │   │   │   ├── bucket
 │   │   │   │   ├── array.rs
 │   │   │   │   ├── mod.rs
-│   │   │   │   └── sort.rs
+│   │   │   │   ├── sort.rs
+│   │   │   │   └── strategy.rs
 │   │   │   ├── macros
 │   │   │   │   ├── error.rs
 │   │   │   │   ├── eval.rs
@@ -86,6 +87,15 @@
 │   │   ├── README.md
 │   │   └── README.old.md
 │   ├── core
+│   │   ├── src
+│   │   │   ├── command.rs
+│   │   │   ├── config.rs
+│   │   │   ├── executor.rs
+│   │   │   ├── hot_reload.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── main.rs
+│   │   │   └── runtime.rs
+│   │   └── Cargo.toml
 │   ├── obj
 │   │   ├── src
 │   │   │   ├── lib.rs
@@ -172,7 +182,54 @@
 │   │   │   └── test_scan.rs
 │   │   ├── Cargo.toml
 │   │   └── README.md
-│   └── sson
+│   ├── sson
+│   │   ├── src
+│   │   │   ├── error_impl.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── obj_adapter_impl.rs
+│   │   │   ├── registry_impl.rs
+│   │   │   ├── resolver_impl.rs
+│   │   │   ├── state_machine_impl.rs
+│   │   │   └── validator_impl.rs
+│   │   ├── tests
+│   │   │   └── simple_test.rs
+│   │   ├── tests.not
+│   │   │   ├── integration_test.rs
+│   │   │   └── tests.txt
+│   │   ├── ai_learn_sson.md
+│   │   ├── Cargo.toml
+│   │   ├── cod_generatore.md
+│   │   ├── CRATE.md
+│   │   ├── spec.sson
+│   │   ├── stati_diagram.md
+│   │   ├── struct.txt
+│   │   ├── TODO2.sson
+│   │   ├── TODO.md
+│   │   ├── TODO.sson
+│   │   └── validatori.md
+│   └── sson.old
+│       ├── src
+│       │   ├── error_impl.rs
+│       │   ├── lib.rs
+│       │   ├── obj_adapter_impl.rs
+│       │   ├── registry_impl.rs
+│       │   ├── resolver_impl.rs
+│       │   ├── state_machine_impl.rs
+│       │   └── validator_impl.rs
+│       ├── tests
+│       │   ├── integration_test.rs
+│       │   └── tests.txt
+│       ├── ai_learn_sson.md
+│       ├── Cargo.toml
+│       ├── cod_generatore.md
+│       ├── CRATE.md
+│       ├── spec.sson
+│       ├── stati_diagram.md
+│       ├── struct.txt
+│       ├── TODO2.sson
+│       ├── TODO.md
+│       ├── TODO.sson
+│       └── validatori.md
 ├── core-data
 │   ├── src
 │   │   ├── flatten
@@ -298,4 +355,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-66 directories, 233 files
+73 directories, 283 files
