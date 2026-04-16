@@ -1,0 +1,288 @@
+# ============================================
+# SAPRI SSON PARSER SPECIFICATION v2.0
+# Unified with core/obj and URCM equilibrium
+# ============================================
+
+[parser]
+description_s: "Parser SSON con supporto core/obj e validazione URCM"
+mode_e: _:enum[strict, generative], _:default=generative
+encoding_s: _:default="utf-8"
+max_depth_n: _:min=1, _:max=1000
+version_s: "2.0"
+_:state[init → parsing → validated → exported]
+_:guard[max_depth < 1000 → parser.active]
+
+# ============================================
+# MODULO: LEXER
+# ============================================
+[.lexer]
+input_s: _:req
+pos_n: _:min=0
+line_n, col_n, buffer_s
+current_token_s
+token_types_e: _:enum[sep, section, subsection, keyval, list, comment, eof, prop_evoker, string, number, bool, null]
+rules_l: _:ref[LexerRule]
+_:state[init → scanning → tokenized]
+_:guard[input not empty → scanning active]
+
+[.inline_prop_handler]
+target_field_s: _:req
+props_l: _:ref[PropDef]
+extracted_b: _:default=false
+_:state[detecting → extracting → attached]
+_:implies[props_l not empty → extracted_b=true]
+_:mutex[target_field, buffer_s]
+
+# ============================================
+# MODULO: CONTEXT & PATH RESOLVER
+# ============================================
+[.resolver]
+stack_l: _:ref[ContextStack]
+current_path_s: _:req
+alias_m: _:ref[AliasMap]
+ref_cache_m
+resolved_l: _:ref[ResolvedRef]
+unresolved_l: _:ref[PendingRef]
+_:state[unresolved → resolving → resolved]
+_:guard[stack not empty → current_path valid]
+_:implies[unresolved not empty, ref_cache active]
+
+[.path_normalizer]
+raw_s: _:req
+normalized_s: _:opt
+parent_s
+depth_n
+_:state[parsing → flattening → validated]
+_:guard[depth ≤ max_depth → normalized not null]
+
+# ============================================
+# MODULO: FIELD DEFINITION & TYPES (con core/obj)
+# ============================================
+[.fields]
+name_s: _:req, _:pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"
+type_e: _:enum[null, bool, number, string, array, object], _:default=string
+constraints_m: _:ref[ConstraintMap]
+inline_props_l: _:ref[PropDef]
+_:state[declared → typed → constrained → ready]
+_:guard[type=object → schema validation available]
+_:guard[type=r → ref valid in dictionary]
+_:mutex[type, inline_props]
+
+[.type_inferencer]
+raw_value_s: _:req
+inferred_type_e: _:ref[fields.type_e]
+confidence_n: _:min=0, _:max=1
+method_s: "obj::Value::type_of()"
+_:state[scanning → inferring → locked]
+_:guard[confidence ≥ 0.8 → type locked]
+
+# ============================================
+# MODULO: DATA ALIGNMENT & CSV
+# ============================================
+[.data]
+row_l: _:ref[CellValue]
+field_map_m: _:ref[FieldToIndex]
+alignment_e: _:enum[strict, pad_null, trim_extra, inline_prop_extract]
+_:state[waiting_fields → parsing_rows → complete]
+_:guard[row length matches field_map or alignment handles mismatch]
+_:implies[alignment=inline_prop_extract, inline_prop_handler active]
+
+[.row_processor]
+raw_line_s: _:req
+cells_l
+props_in_line_l: _:ref[PropDef]
+aligned_map_m
+_:state[split → classified → aligned]
+_:mutex[props_in_line, cells]
+_:guard[props_in_line not empty → cells length reduced]
+
+# ============================================
+# MODULO: DEDUPLICATION ENGINE
+# ============================================
+[.dedup]
+field_dict_m: _:ref[FlatDict]
+repeated_patterns_l: _:ref[Pattern]
+extracted_tables_l: _:ref[TableRef]
+ref_keys_l: _:ref[RefKey]
+threshold_n: _:default=2
+_:state[scanning → grouping → extracting → linked]
+_:mutex[extracted, original]
+_:guard[repeated count ≥ threshold → extract]
+_:implies[extracted → ref_keys populated]
+
+[.nested_extractor]
+path_s: _:req
+structure_m
+new_table_name_s
+link_key_s
+_:state[detect → isolate → replace → verify]
+_:guard[structure depth > 1 → extract candidate]
+
+# ============================================
+# MODULO: CIRCULAR REFERENCE GUARD
+# ============================================
+[.circular_guard]
+visit_stack_l: _:ref[PathStack]
+visited_m: _:ref[VisitedMap]
+max_chain_n: _:default=1000
+cycle_detected_b: _:default=false
+_:state[tracking → validating → clear]
+_:implies[new_ref → push visit_stack]
+_:mutex[resolved, visit_stack]
+_:guard[ref in visit_stack → cycle_detected_b=true]
+_:guard[cycle_detected → state=invalid, err collected]
+
+# ============================================
+# MODULO: CONSTRAINT VALIDATOR (con S)
+# ============================================
+[.validator]
+rules_l: _:ref[ConstraintRule]
+errors_l: _:ref[ParseError]
+warnings_l
+mode_s: _:ref[parser.mode]
+constraints_m: _:ref[ConstraintMap]
+state_s: _:state[pending, valid, invalid]
+S_f: _:min=0, _:max=2, _:default=1.0
+_:guard[validator.state=valid → S ≥ 0.9]
+_:guard[validator.state=invalid → S < 0.9]
+_:mutex[strict, generative]
+_:guard[state=invalid → errors not empty]
+_:implies[mode=strict, stop_on_first_error]
+_:implies[mode=generative, collect_warnings, continue]
+
+[.constraint_evaluator]
+rule_s: _:req
+context_m
+result_b
+method_s: "registry.call(rule, context)"
+_:state[loaded → evaluating → resolved]
+_:guard[rule valid → result not null]
+
+# ============================================
+# MODULO: ERROR RECOVERY & REPORTING
+# ============================================
+[.error_handler]
+errors_l: _:ref[ParseError]
+warnings_l
+recovered_b: _:default=false
+_:state[detecting → recovering → logged]
+_:implies[mode=generative, recovered_b=true on recover]
+_:guard[recovered → warnings updated, parser continues]
+
+[.report]
+dict_m: _:req
+tree_m: _:opt
+errors_l
+warnings_l
+stats_m: _:ref[ParseStats]
+S_f: _:ref[validator.S_f]
+_:state[raw → normalized → validated → exported]
+_:guard[validator.state=valid → report.exportable=true]
+
+# ============================================
+# NUOVO MODULO: OBJ ADAPTER (core/obj)
+# ============================================
+[.obj_adapter]
+description_s: "Adapter tra dizionario piatto e sapri_obj::Obj"
+methods_l:
+  - "from_flat_dict(flat) → Obj"
+  - "to_flat_dict(obj) → FlatDict"
+  - "get_path(obj, path) → Value"
+  - "set_path(obj, path, value) → Result<()>"
+_:guard[path_syntax = "a.b.c" → nested access]
+_:guard[flat_dict has key "a.b.c" → obj has nested structure]
+
+# ============================================
+# NUOVO MODULO: FUNCTION REGISTRY
+# ============================================
+[.function_registry]
+description_s: "Registro di funzioni validatrici chiamate per nome"
+validators_m:
+  req: "campo obbligatorio"
+  min: "valore minimo numerico"
+  max: "valore massimo numerico"
+  pattern: "regex pattern"
+  enum: "valori consentiti"
+  range: "intervallo [min,max]"
+  mutex: "esclusione mutua tra campi"
+  guard: "condizione booleana"
+  sum: "somma di campi"
+method_s: "registry.call(name, obj, path, params)"
+_:guard[function registered → callable by name]
+_:guard[function not registered → error_strict, warning_generative]
+
+# ============================================
+# AZIONI & STRATEGIE (PIPELINE)
+# ============================================
+[_ACTIONS]
+lex = tokenize_input
+parse = build_ast
+resolve = resolve_refs
+dedup = extract_duplicates
+validate = check_constraints
+err = collect_errors
+rec = recover_and_continue
+flush = clear_buffers
+n = NULL
+
+[_STRATEGIES]
+[strict]  lex, parse, resolve, dedup, validate
+[generative] lex, parse, resolve, rec, dedup, validate, err, flush
+
+[parser.flow]
+pipeline_l: _:ref[lexer], _:ref[resolver], _:ref[dedup], _:ref[validator]
+on_fail_l: rec, err, n
+_:state[pending → lexing → building → resolving → deduplicating → validating → done]
+_:guard[validator.state=valid → parser.state=done]
+_:implies[mode=strict, on_fail=n]
+_:implies[mode=generative, on_fail=rec]
+_:mutex[strict, generative]
+
+# ============================================
+# REGOLE DI NORMALIZZAZIONE (EDGE CASES)
+# ============================================
+[.normalization_rules]
+[inline_prop_in_row]
+  desc: "Se _: appare in riga dati, viene estratto e applicato al campo corrispondente"
+  rule: _:implies[row contains _: → inline_prop_handler.extract, cell_count -= 1]
+  state: _:guard[extracted → cell alignment recalculated]
+
+[circular_ref_detection]
+  desc: "Stack di visita con max_chain guard"
+  rule: _:implies[ref lookup → visit_stack.push]
+  rule: _:mutex[visit_stack, resolved]
+  state: _:guard[ref in stack → cycle_detected_b=true, err.push, rec or n]
+
+[dedup_threshold]
+  desc: "Oggetti ripetuti ≥ threshold estratti in tabella separata"
+  rule: _:implies[pattern count ≥ threshold → nested_extractor.isolate]
+  state: _:mutex[extracted, original_rows]
+  rule: _:guard[extracted → original replaced with ref_key]
+
+[type_override]
+  desc: "Tipo esplicito vince su inferenza"
+  rule: _:implies[field type set → inferencer.locked]
+  state: _:guard[inferred.confidence < explicit → explicit wins]
+
+[strict_vs_generative_alignment]
+  desc: "Comportamento allineamento righe extra/mancanti"
+  rule: _:implies[mode=strict, extra_cols → err, row skipped]
+  rule: _:implies[mode=generative, extra_cols → warning, ignored or auto_field]
+  state: _:guard[alignment=pad_null → missing → NULL]
+
+# ============================================
+# OUTPUT FINALE (con Obj e S)
+# ============================================
+[output.dict]
+obj_m: _:ref[sapri_obj::Obj]
+fields_m: _:req
+tables_m: _:opt
+constraints_m
+refs_resolved_l
+errors_l
+warnings_l
+mode_s
+S_f: _:ref[validator.S_f]
+_:state[generated → validated → exported]
+_:guard[validator.state=valid → output.exportable]
+_:implies[exportable → obj_m.to_json() serializable]

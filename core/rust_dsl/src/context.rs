@@ -10,6 +10,7 @@ use crate::atom_value::AtomValue;
 #[derive(Clone)]
 pub struct Context {
     local: HashMap<String, Atom<AtomValue>>,
+    names: Vec<String>,
     parent: Option<Arc<Context>>,
 }
 
@@ -18,6 +19,7 @@ impl Context {
     pub fn new() -> Self {
         Self {
             local: HashMap::new(),
+            names: Vec::new(),
             parent: None,
         }
     }
@@ -26,18 +28,25 @@ impl Context {
     pub fn with_parent(parent: &Arc<Context>) -> Self {
         Self {
             local: HashMap::new(),
+            names: Vec::new(),
             parent: Some(parent.clone()),
         }
     }
 
     /// Imposta un valore nel contesto locale
     pub fn set(&mut self, name: &str, value: impl Into<Atom<AtomValue>>) {
+        if !self.local.contains_key(name) {
+            self.names.push(name.to_string());
+        }
         self.local.insert(name.to_string(), value.into());
     }
     
     /// Imposta un valore semplice (AtomValue) nel contesto locale
     /// Converte automaticamente in Atom::resolved()
     pub fn set_value(&mut self, name: &str, value: AtomValue) {
+        if !self.local.contains_key(name) {
+            self.names.push(name.to_string());
+        }
         self.local.insert(name.to_string(), ::sapri_base::Atom::resolved(value));
     }
 
@@ -52,9 +61,9 @@ impl Context {
         None
     }
 
-    /// Ottiene il valore risolto (chiama get() e poi get() sull'atomo)
-	pub fn get_value(&self, name: &str) -> Option<AtomValue> {
-        self.get(name).map(|atom| atom.get().clone())
+    /// Ottiene il valore risolto
+    pub fn get_value(&self, name: &str) -> Option<AtomValue> {
+        self.get(name).and_then(|atom| atom.value.clone())
     }
 
     /// Verifica se un nome è definito (locale o ereditato)
@@ -85,6 +94,59 @@ impl Context {
     /// Restituisce true se non ci sono definizioni locali
     pub fn is_empty(&self) -> bool {
         self.local.is_empty()
+    }
+
+    // ============================================
+    // METODI PER ESPORRE I NOMI
+    // ============================================
+
+    /// Restituisce tutti i nomi definiti localmente (nell'ordine di inserimento)
+    pub fn names(&self) -> &[String] {
+        &self.names
+    }
+
+    /// Restituisce tutti i nomi definiti (locali + ereditati) senza duplicati
+    pub fn all_names(&self) -> Vec<String> {
+        let mut names = std::collections::HashSet::new();
+        
+        // Aggiungi nomi locali
+        for name in &self.names {
+            names.insert(name.clone());
+        }
+        
+        // Aggiungi nomi ereditati dal padre
+        if let Some(parent) = &self.parent {
+            for name in parent.all_names() {
+                names.insert(name);
+            }
+        }
+        
+        let mut result: Vec<String> = names.into_iter().collect();
+        result.sort();
+        result
+    }
+
+    /// Restituisce una mappa di tutti i nomi e i loro valori (risolti)
+    pub fn dump(&self) -> HashMap<String, AtomValue> {
+        let mut result = HashMap::new();
+        
+        // Prima i valori ereditati (dal padre)
+        if let Some(parent) = &self.parent {
+            for (name, value) in parent.dump() {
+                result.insert(name, value);
+            }
+        }
+        
+        // Poi i valori locali (sovrascrivono)
+        for name in &self.names {
+            if let Some(atom) = self.local.get(name) {
+                if let Some(ref value) = atom.value {
+                    result.insert(name.clone(), value.clone());
+                }
+            }
+        }
+        
+        result
     }
 }
 

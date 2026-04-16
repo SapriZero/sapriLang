@@ -3,6 +3,8 @@ members = [
 "core/base", 
 "core/rust_dsl",
 "core/obj",
+"core/sson",
+"core/core",
 "editor-server",
 "core-data",
 "sson",

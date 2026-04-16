@@ -1,0 +1,54 @@
+[core.sson]
+description_s: "Motore di validazione e risoluzione per .sson"
+version_s: "1.0"
+depends_on_l: "sapri_base", "sapri_obj"
+
+[core.sson.validator]
+[.constraints]
+req_b: "_:req → field.required = true"
+guard_s: "_:guard[condition] → condition must be satisfied"
+mutex_l: "_:mutex[a,b] → exactly one of a,b can be active"
+state_s: "_:state[from → to] → valid transition"
+range_s: "_:min=x, _:max=y → value within [x,y]"
+pattern_s: "_:pattern=regex → value matches regex"
+sum_s: "_:sum[a,b]=c → a + b = c"
+
+[.evaluation]
+formula_s: "S = (v·i)/(t·k)"
+v_desc_s: "campos_validados / total_campos"
+i_desc_s: "peso del vincolo (req=1.0, opt=0.5)"
+t_desc_s: "1.0 (target de equilibrio)"
+k_desc_s: "mode: strict=1.0, generative=1.5"
+_:guard[S >= 0.9 → valid]
+_:guard[S < 0.9 AND mode=strict → invalid, stop]
+_:guard[S < 0.9 AND mode=generative → warning, continue]
+
+[core.sson.resolver]
+[.ref_resolution]
+syntax_s: "_:ref[path.to.field]"
+lookup_e: _:enum[flat, nested], _:default=flat
+_:guard[path exists → resolved]
+_:guard[path missing → error_strict, warning_generative]
+
+[.dag]
+depends_on_l: "field depends on other fields"
+cycles_e: _:enum[detected, none]
+_:guard[cycle_detected → active=false, S=0 for affected nodes]
+
+[core.sson.state_machine]
+[.states]
+definition_s: "_:state[pending → active → done]"
+valid_transitions_l: "pending→active", "active→done"
+_:guard[invalid_transition → error]
+
+[core.sson.hot_reload]
+[.reload]
+trigger_e: _:enum[file_change, api_call, timer], _:default=file_change
+preserve_state_b: _:default=true
+_:guard[preserve_state=true → retain runtime values]
+_:guard[preserve_state=false → reset to defaults]
+
+[core.sson.error]
+[.types]
+error_codes_l: "ERR_PARSE", "ERR_RESOLVE", "ERR_VALIDATE", "ERR_CIRCULAR", "ERR_STATE"
+recovery_e: _:enum[stop, skip, default], _:default=stop

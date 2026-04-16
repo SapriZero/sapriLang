@@ -1,0 +1,10 @@
+core/sson/
+├── Cargo.toml
+├── src/
+│   ├── lib.rs                    # Definizioni (type, struct, trait, mod)
+│   ├── types.rs                  # Type aliases, enums
+│   ├── validator_impl.rs         # Implementazione validatori
+│   ├── resolver_impl.rs          # Implementazione resolver
+│   ├── state_machine_impl.rs     # Implementazione stati
+│   ├── registry_impl.rs          # Function registry
+│   └── obj_adapter_impl.rs       # Adapter per core/obj

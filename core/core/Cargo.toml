@@ -1,0 +1,30 @@
+[package]
+name = "sapri_core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_base = { path = "../base" }
+sapri_obj = { path = "../obj" }
+sapri_rust_dsl = { path = "../rust_dsl" }
+sapri_sson = { path = "../sson" }
+
+# Utilità
+regex = "1.10"
+once_cell = "1.19"
+
+# Per hot-reload (monitoraggio file)
+notify = "6.1"
+crossbeam-channel = "0.5"
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json"]
+
+[dependencies.serde]
+version = "1.0"
+optional = true
+
+[dependencies.serde_json]
+version = "1.0"
+optional = true

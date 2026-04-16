@@ -1,0 +1,19 @@
+# Esegui tutti i test
+cargo test -p sapri_sson
+
+# Esegui solo i test di un modulo specifico
+cargo test -p sapri_sson test_validator
+cargo test -p sapri_sson test_resolver
+cargo test -p sapri_sson test_registry
+cargo test -p sapri_sson test_obj_adapter
+cargo test -p sapri_sson test_statemachine
+cargo test -p sapri_sson test_error_handler
+cargo test -p sapri_sson test_equilibrium
+cargo test -p sapri_sson test_macros
+cargo test -p sapri_sson test_integration
+
+# Esegui benchmark (richiede --nocapture per vedere output)
+cargo test -p sapri_sson bench_validation -- --nocapture
+
+# Esegui con output dettagliato
+cargo test -p sapri_sson -- --nocapture

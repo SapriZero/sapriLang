@@ -1,0 +1,61 @@
+[core.sson]
+description_s: "Motore di validazione e risoluzione per .sson usando core/obj"
+version_s: "1.0"
+depends_on_l: "sapri_base", "sapri_obj"
+
+[core.sson.registry]
+[.validators]
+req_s: "campo obbligatorio"
+min_s: "valore minimo"
+max_s: "valore massimo"
+pattern_s: "regex pattern"
+enum_s: "valori consentiti"
+range_s: "intervallo [min,max]"
+
+[.resolvers]
+ref_s: "risolve _:ref[path]"
+default_s: "applica valore di default"
+
+[.state_transitions]
+transition_s: "verifica transizione valida"
+
+[core.sson.validator]
+input_s: "Obj (dizionario piatto)"
+output_s: "Result<ValidatedObj, ValidationError>"
+pipeline_l: "resolve_refs → apply_defaults → validate_constraints → check_state"
+_:guard[all_valid → S=1]
+_:guard[any_invalid → S<1]
+
+[core.sson.resolver]
+[.ref_resolution]
+syntax_s: "_:ref[path.to.field]"
+method_s: "obj.get(path)"
+_:guard[path exists → value copied]
+_:guard[path missing → error_strict, warning_generative]
+
+[core.sson.constraint]
+[.mutex]
+syntax_s: "_:mutex[field_a, field_b]"
+evaluation_s: "exactly_one_active"
+_:guard[both_active OR none_active → violation]
+
+[.guard]
+syntax_s: "_:guard[field = value]"
+evaluation_s: "field.value == expected"
+_:guard[condition false → violation]
+
+[.sum]
+syntax_s: "_:sum[a,b]=c"
+evaluation_s: "a + b == c"
+
+[core.sson.state_machine]
+[.states]
+definition_s: "_:state[pending → active → done]"
+method_s: "registry.call('transition', from, to)"
+_:guard[transition_valid → state_updated]
+_:guard[transition_invalid → error]
+
+[core.sson.hot_reload]
+trigger_e: _:enum[file_change, api], _:default=file_change
+preserve_state_b: _:default=true
+method_s: "reload .sson, re-validate, preserve runtime values if preserve_state=true"
