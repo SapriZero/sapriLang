@@ -1,0 +1,73 @@
+# ============================================
+# WIKIPEDIA FAST EXTRACTOR
+# Estrae solo metadati, non il testo completo
+# ============================================
+
+[fast_extractor]
+description_s: "Estrattore veloce di metadati Wikipedia"
+version_s: "1.0"
+
+[fast_extractor.namespaces]
+include_l: 0, 14, 10, 100, 102
+exclude_l: -2, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 15, 101, 103, 828, 829, 2300, 2301, 2302, 2303, 2600
+
+[fast_extractor.fields]
+[.title]
+source_s: "title"
+type_s: "string"
+required_b: true
+
+[.ns]
+source_s: "ns"
+type_s: "integer"
+required_b: true
+
+[.id]
+source_s: "id"
+type_s: "integer"
+required_b: true
+
+[.redirect]
+source_s: "redirect"
+type_s: "string"
+optional_b: true
+
+[.categories]
+source_s: "text"
+pattern_s: "\\[\\[Categoria:([^\\|\\]]+)(?:\\|[^\\]]+)?\\]\\]"
+type_s: "array<string>"
+max_matches_n: 50
+
+[.templates]
+source_s: "text"
+pattern_s: "\\{\\{([^\\|\\}]+)"
+type_s: "array<string>"
+max_matches_n: 20
+optional_b: true
+
+[.word_count]
+source_s: "text"
+type_s: "integer"
+compute_s: "count_words(text)"
+optional_b: true
+note_s: "Opzionale, solo se serve statistica"
+
+# ============================================
+# OUTPUT FORMAT
+# ============================================
+
+[output]
+[.articles]
+format_s: "sson"
+fields_l: "title", "ns", "id", "redirect", "categories"
+file_s: "data/articles.sson"
+
+[.categories]
+format_s: "sson"
+fields_l: "title", "parent_categories"
+file_s: "data/categories.sson"
+
+[.redirects]
+format_s: "sson"
+fields_l: "from", "to"
+file_s: "data/redirects.sson"

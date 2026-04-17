@@ -1,0 +1,16 @@
+[language]
+name_s: "Italian"
+code_s: "it"
+version_s: "1.0"
+
+[language.params]
+block_size_n: 65536
+char_bits_n: 6
+primary_index_size_n: 4096
+escape_code_n: 63
+
+[language.files]
+stopwords_s: "stopwords.sson"
+suffixes_s: "suffixes.sson"
+charmap_s: "charmap.sson"
+output_s: "dictionary.bin"

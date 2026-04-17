@@ -1,0 +1,213 @@
+# ============================================
+# DICTIONARY COMPRESSOR - SPECIFICA
+# Versione: 1.0
+# ============================================
+# QUESTO FILE DEFINSICE LE STRUTTURE E I TIPI
+# I VALORI SONO NEL FILE dictionary_config.sson
+# ============================================
+
+[spec]
+name_s: "Dictionary Compressor"
+description_s: "Compressore di dizionario per ricerca O(1) con array a blocchi"
+version_s: "1.0.0"
+
+# ============================================
+# TIPI DEFINITI
+# ============================================
+
+[types]
+[.block_size]
+type_s: "u16"
+description_s: "Dimensione massima di un blocco (65536)"
+
+[.primary_index_size]
+type_s: "u16"
+description_s: "Dimensione indice primario (4096 = 64x64)"
+
+[.char_code]
+type_s: "u8"
+description_s: "Codice carattere a 6 bit (0-63)"
+
+[.escape_code]
+type_s: "u8"
+description_s: "Codice escape per caratteri non mappati"
+
+# ============================================
+# STRUTTURE DATI
+# ============================================
+
+[structs]
+[.WordEntry]
+description_s: "Entry di una parola nel dizionario"
+fields_l: "word_id", "weight", "stem_idx", "suffix_idx", "next_overflow"
+
+[.Block]
+description_s: "Blocco di parole (max block_size entry)"
+fields_l: "words", "count"
+
+[.PrimaryIndexEntry]
+description_s: "Entry dell'indice primario"
+fields_l: "block_idx", "offset"
+
+[.Header]
+description_s: "Header del file binario"
+fields_l: "magic", "version", "block_size", "n_blocks", "n_words"
+
+# ============================================
+# MAPPA CARATTERI (struttura, non valori)
+# ============================================
+
+[char_mapping]
+description_s: "Struttura della mappa caratteri 6-bit"
+bits_n: 6
+max_value_n: 63
+
+[char_mapping.categories]
+[.lowercase]
+description_s: "Lettere minuscole a-z"
+char_range_s: "a-z"
+code_range_s: "0-25"
+
+[.uppercase]
+description_s: "Lettere maiuscole A-Z"
+char_range_s: "A-Z"
+code_range_s: "26-51"
+
+[.space]
+description_s: "Spazio"
+char_s: " "
+
+[.accents]
+description_s: "Caratteri accentati"
+char_list_s: "à", "è", "é", "ì", "ò", "ù"
+
+[.punctuation]
+description_s: "Punteggiatura comune"
+char_list_s: ".", ",", "-", "_"
+
+[.escape]
+description_s: "Carattere non mappato"
+
+# ============================================
+# SUFFISSI (struttura, non valori)
+# ============================================
+
+[suffixes]
+description_s: "Tabella suffissi per compressione"
+max_length_n: 16
+type_s: "array di stringhe"
+
+# ============================================
+# STOPWORDS (struttura, non valori)
+# ============================================
+
+[stopwords]
+description_s: "Parole da escludere dal dizionario"
+type_s: "array di stringhe"
+
+# ============================================
+# FLUSSO (struttura)
+# ============================================
+
+[flow]
+[.phase_1]
+name_s: "Estrazione parole"
+input_type_s: "file"
+output_type_s: "file"
+
+[.phase_2]
+name_s: "Filtraggio stopwords"
+input_type_s: "file"
+output_type_s: "file"
+
+[.phase_3]
+name_s: "Analisi distribuzione"
+input_type_s: "file"
+output_type_s: "json"
+
+[.phase_4]
+name_s: "Costruzione blocchi"
+input_type_s: "file"
+output_type_s: "binary"
+
+[.phase_5]
+name_s: "Costruzione indice primario"
+input_type_s: "binary"
+output_type_s: "binary"
+
+[.phase_6]
+name_s: "Compressione suffissi"
+input_type_s: "binary"
+output_type_s: "binary"
+
+[.phase_7]
+name_s: "Salvataggio formato binario"
+input_type_s: "binary"
+output_type_s: "binary"
+
+# ============================================
+# STRUTTURA AD ALBERO
+# ============================================
+
+[tree]
+[.root]
+name_s: "Root"
+type_s: "PrimaryIndex"
+size_type_s: "primary_index_size"
+
+[.block]
+name_s: "Block"
+type_s: "Array"
+element_type_s: "WordEntry"
+max_size_type_s: "block_size"
+
+[.word_entry]
+name_s: "WordEntry"
+type_s: "Struct"
+fields_ref_s: "WordEntry"
+
+[.overflow]
+name_s: "Overflow"
+type_s: "LinkedList"
+element_type_s: "WordEntry"
+
+# ============================================
+# FORMATO FILE BINARIO (struttura)
+# ============================================
+
+[binary_format]
+[.header]
+fields_l: "magic", "version", "block_size", "n_blocks", "n_words"
+
+[.primary_index]
+size_type_s: "primary_index_size"
+entry_format_s: "u32"
+
+[.blocks]
+format_s: "Array di blocchi"
+[.block_header]
+fields_l: "block_id", "n_words"
+[.word_entry_format]
+fields_ref_s: "WordEntry"
+
+[.suffix_table]
+format_s: "Array di stringhe"
+
+# ============================================
+# RICERCA (struttura algoritmo)
+# ============================================
+
+[search]
+[.steps]
+step_1_s: "Extract first 2 chars"
+step_2_s: "Compute primary index"
+step_3_s: "Read primary_index[ key ] → (block_idx, offset)"
+step_4_s: "Access blocks[block_idx][offset]"
+step_5_s: "If match, return WordEntry"
+step_6_s: "If not match, follow next_overflow"
+step_7_s: "Fallback to adjacent blocks if not found"
+
+[.complexity]
+best_case_s: "O(1)"
+worst_case_s: "O(k)"
+average_case_s: "O(1)"

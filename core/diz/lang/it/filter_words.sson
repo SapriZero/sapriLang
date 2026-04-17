@@ -1,0 +1,5 @@
+# Parole da filtrare nell'elaborazione del testo
+# (articoli, preposizioni, congiunzioni, pronomi)
+
+[filter_words]
+list_l: "a", "à", "al", "allo", "alla", "ai", "agli", "alle", "con", "coi", "col", "come", "da", "dal", "dalla", "dai", "dagli", "dalle", "di", "del", "dello", "della", "dei", "degli", "delle", "e", "ed", "è", "era", "ero", "erano", "il", "lo", "la", "i", "gli", "le", "l'", "in", "nel", "nello", "nella", "nei", "negli", "nelle", "non", "per", "se", "si", "sì", "su", "sul", "sullo", "sulla", "sui", "sugli", "sulle", "un", "uno", "una", "un'"

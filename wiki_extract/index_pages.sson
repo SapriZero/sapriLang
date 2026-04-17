@@ -1,0 +1,51 @@
+# ============================================
+# WIKIPEDIA FAST EXTRACTOR - Formato compatto
+# ============================================
+
+[fast_extractor]
+version_s: "1.0"
+
+[fast_extractor.namespaces]
+include_l: 0, 14, 10, 100, 102
+
+[fast_extractor.output.articles]
+format_s: "csv"
+separator_s: "|"
+list_separator_s: ","
+fields_l: "id", "title", "byte_start", "byte_end", "categories"
+file_s: "data/articles.sson"
+ns_filter: 0
+
+[fast_extractor.output.categories]
+format_s: "csv"
+separator_s: "|"
+fields_l: "id", "title", "parent_category"
+file_s: "data/categories.sson"
+ns_filter: 14
+
+[fast_extractor.output.templates]
+format_s: "csv"
+separator_s: "|"
+fields_l: "id", "title", "byte_start", "byte_end"
+file_s: "data/templates.sson"
+ns_filter: 10
+
+[fast_extractor.output.portals]
+format_s: "csv"
+separator_s: "|"
+fields_l: "id", "title"
+file_s: "data/portals.sson"
+ns_filter: 100
+
+[fast_extractor.output.projects]
+format_s: "csv"
+separator_s: "|"
+fields_l: "id", "title"
+file_s: "data/projects.sson"
+ns_filter: 102
+
+[fast_extractor.output.redirects]
+format_s: "csv"
+separator_s: "|"
+fields_l: "from", "to"
+file_s: "data/redirects.sson"

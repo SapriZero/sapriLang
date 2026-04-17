@@ -1,0 +1,17 @@
+[package]
+name = "sapri_morph"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_core = { path = "../core" }
+sapri_diz = { path = "../diz" }
+regex = "1.10"
+anyhow = "1.0"
+
+[features]
+default = []
+
+[[bin]]
+name = "morph-export"
+path = "src/bin/morph_export.rs"

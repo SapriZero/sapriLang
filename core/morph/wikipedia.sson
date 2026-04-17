@@ -1,0 +1,37 @@
+[struct.Brain]
+derive: "Debug"
+
+[struct.Brain.fields]
+runtime: "sapri_core::Runtime"
+knowledge: "KnowledgeBase"
+memory: "HolographicMemory"
+learner: "Learner"
+conversation: "Conversation"
+
+[impl.Brain]
+functions: "new", "talk", "learn", "save", "load", "stats"
+
+[impl.Brain.new]
+params: "config_path: Option<&str>"
+return_type: "Result<Self, String>"
+is_static: "true"
+
+[impl.Brain.talk]
+params: "&mut self, input: &str"
+return_type: "String"
+
+[impl.Brain.learn]
+params: "&mut self, input: &str, response: &str"
+return_type: "()"
+
+[impl.Brain.save]
+params: "&self, path: &str"
+return_type: "Result<(), String>"
+
+[impl.Brain.load]
+params: "&mut self, path: &str"
+return_type: "Result<(), String>"
+
+[impl.Brain.stats]
+params: "&self"
+return_type: "String"

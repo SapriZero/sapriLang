@@ -1,0 +1,86 @@
+# ============================================
+# DIZIONARIO STRUTTURATO GLOBALE
+# ============================================
+
+[diz]
+version_s: "1.0"
+
+# ============================================
+# PATHS PER ACCESSO AI DATI
+# ============================================
+
+[diz.paths]
+[diz.paths.text]
+[diz.paths.text.filter_words]
+    type_s: "array<string>"
+    source_s: "lang/it/filter_words.sson"
+
+[diz.paths.text.min_word_length]
+    type_s: "u8"
+    default_n: 3
+
+[diz.paths.text.charmap]
+[diz.paths.text.charmap.bits]
+    type_s: "u8"
+    default_n: 6
+
+[diz.paths.text.charmap.escape_code]
+    type_s: "u8"
+    default_n: 63
+
+[diz.paths.text.charmap.lowercase]
+[diz.paths.text.charmap.lowercase.start]
+    type_s: "char"
+    default_s: "a"
+
+[diz.paths.text.charmap.lowercase.end]
+    type_s: "char"
+    default_s: "z"
+
+[diz.paths.text.charmap.lowercase.start_code]
+    type_s: "u8"
+    default_n: 0
+
+[diz.paths.text.charmap.uppercase]
+[diz.paths.text.charmap.uppercase.start]
+    type_s: "char"
+    default_s: "A"
+
+[diz.paths.text.charmap.uppercase.end]
+    type_s: "char"
+    default_s: "Z"
+
+[diz.paths.text.charmap.uppercase.start_code]
+    type_s: "u8"
+    default_n: 26
+
+[diz.paths.text.charmap.space]
+[diz.paths.text.charmap.space.char]
+    type_s: "char"
+    default_s: " "
+
+[diz.paths.text.charmap.space.code]
+    type_s: "u8"
+    default_n: 52
+
+[diz.paths.text.charmap.accents]
+    type_s: "array<tuple<char,u8>>"
+    source_s: "lang/it/accents.sson"
+
+[diz.paths.text.charmap.punctuation]
+    type_s: "array<tuple<char,u8>>"
+    source_s: "lang/it/punctuation.sson"
+
+# ============================================
+# VOCABOLARIO DEL CODICE
+# ============================================
+
+[diz.code]
+[diz.code.structs]
+    allowed_l: "Brain", "HolographicMemory", "KnowledgeBase", "Learner", "Conversation", "MemoryEntry"
+
+[diz.code.fields]
+    allowed_l: "runtime", "knowledge", "memory", "learner", "conversation", "entries", "max_size", "timestamp", "input", "response", "soggetto", "predicato", "oggetto", "peso", "stats"
+
+[diz.code.methods]
+    allowed_l: "new", "with_max_size", "remember", "recall", "talk", "learn", "save", "load", "add", "answer", "get", "clear", "len", "is_empty", "stats", "confidence"

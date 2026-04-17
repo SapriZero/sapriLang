@@ -1,0 +1,35 @@
+[stopwords]
+list_l: "a", "à", "al", "allo", "alla", "ai", "agli", "alle", "con", "coi", "col", "come", "da", "dal", "dalla", "dai", "dagli", "dalle", "di", "del", "dello", "della", "dei", "degli", "delle", "e", "ed", "è", "era", "ero", "erano", "il", "lo", "la", "i", "gli", "le", "l'", "in", "nel", "nello", "nella", "nei", "negli", "nelle", "non", "per", "se", "si", "sì", "su", "sul", "sullo", "sulla", "sui", "sugli", "sulle", "un", "uno", "una", "un'"
+[suffixes]
+list_l: "a", "e", "i", "o", "are", "ere", "ire", "mente", "zione", "sione", "tà", "ità", "bilità", "ismo", "ista", "istico", "issimo", "errimo", "atore", "izione", "ale", "ile"
+[charmap]
+bits_n: 6
+escape_code_n: 63
+
+[charmap.lowercase]
+start_s: "a"
+end_s: "z"
+start_code_n: 0
+end_code_n: 25
+
+[charmap.uppercase]
+start_s: "A"
+end_s: "Z"
+start_code_n: 26
+end_code_n: 51
+
+[charmap.space]
+char_s: " "
+code_n: 52
+
+[charmap.accents]
+chars_l: "à", "è", "é", "ì", "ò", "ù"
+codes_l: 53, 54, 55, 56, 57, 58
+
+[charmap.punctuation]
+chars_l: ".", ",", "-", "_"
+codes_l: 59, 60, 61, 62
+
+[charmap.escape]
+char_s: "ESCAPE"
+code_n: 63

@@ -1,0 +1,45 @@
+{
+  "diz": {
+    "version": "1.0"
+  },
+  "text": {
+    "filter_words": {
+      "list": ["a", "à", "al", "allo", "alla", "ai", "agli", "alle", "con", "coi", "col", "come", "da", "dal", "dalla", "dai", "dagli", "dalle", "di", "del", "dello", "della", "dei", "degli", "delle", "e", "ed", "è", "era", "ero", "erano", "il", "lo", "la", "i", "gli", "le", "l'", "in", "nel", "nello", "nella", "nei", "negli", "nelle", "non", "per", "se", "si", "sì", "su", "sul", "sullo", "sulla", "sui", "sugli", "sulle", "un", "uno", "una", "un'"]
+    },
+    "min_word_length": 3,
+    "charmap": {
+      "bits": 6,
+      "escape_code": 63,
+      "lowercase": {
+        "start": "a",
+        "end": "z",
+        "start_code": 0,
+        "end_code": 25
+      },
+      "uppercase": {
+        "start": "A",
+        "end": "Z",
+        "start_code": 26,
+        "end_code": 51
+      },
+      "space": {
+        "char": " ",
+        "code": 52
+      },
+      "accents": [
+        ["à", 53],
+        ["è", 54],
+        ["é", 55],
+        ["ì", 56],
+        ["ò", 57],
+        ["ù", 58]
+      ],
+      "punctuation": [
+        [".", 59],
+        [",", 60],
+        ["-", 61],
+        ["_", 62]
+      ]
+    }
+  }
+}
