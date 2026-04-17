@@ -6,7 +6,8 @@
 │   │   ├── load.sson
 │   │   ├── memory.sson
 │   │   ├── response_templates.sson
-│   │   └── validators.sson
+│   │   ├── validators.sson
+│   │   └── wikipedia.sson
 │   ├── data
 │   │   ├── italiano_2_4_2007_09_01
 │   │   │   ├── it_IT.aff
@@ -71,12 +72,6 @@
 │   │   │   └── urcm_nlp.py
 │   │   └── pyproject.toml
 │   ├── src
-│   │   ├── knowledge.rs
-│   │   ├── load.rs
-│   │   ├── memory.rs
-│   │   ├── response_templates.rs
-│   │   └── validators.rs
-│   ├── src1
 │   │   ├── brain.rs
 │   │   ├── conversation.rs
 │   │   ├── knowledge.rs
@@ -84,6 +79,16 @@
 │   │   ├── lib.rs
 │   │   ├── main.rs
 │   │   └── memory.rs
+│   ├── sson
+│   │   ├── brain.sson
+│   │   ├── conversation.sson
+│   │   ├── knowledge.sson
+│   │   ├── learning.sson
+│   │   ├── memory.rs
+│   │   ├── memory.sson
+│   │   ├── test.sson
+│   │   ├── wikipedia_spec.sson
+│   │   └── wikipedia.sson
 │   ├── ai_speack.md
 │   ├── Cargo.toml
 │   ├── loader.sson
@@ -405,4 +410,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-81 directories, 325 files
+81 directories, 330 files
