@@ -9,6 +9,15 @@
 │   │   ├── validators.sson
 │   │   └── wikipedia.sson
 │   ├── data
+│   │   ├── data
+│   │   │   ├── data
+│   │   │   │   ├── checkpoint.json
+│   │   │   │   ├── nouns.sson
+│   │   │   │   ├── verbs.sson
+│   │   │   │   └── words.sson
+│   │   │   ├── checkpoint.json
+│   │   │   ├── itwiki-latest-pages-articles.xml.bz2
+│   │   │   └── wiki-extract
 │   │   ├── italiano_2_4_2007_09_01
 │   │   │   ├── it_IT.aff
 │   │   │   ├── it_IT_AUTHORS
@@ -21,7 +30,7 @@
 │   │   │   ├── it_IT_README.txt
 │   │   │   ├── it_IT_statistiche.ods
 │   │   │   └── it_IT_todo.txt
-│   │   ├── itwiki-latest-pages-articles.xml.bz2
+│   │   ├── wiki-extract
 │   │   ├── wikipedia_words_clean.txt
 │   │   └── wikipedia_words.txt
 │   ├── scripts
@@ -143,6 +152,7 @@
 │   ├── core
 │   │   ├── src
 │   │   │   ├── command.rs
+│   │   │   ├── config_loader.rs
 │   │   │   ├── config.rs
 │   │   │   ├── executor.rs
 │   │   │   ├── hot_reload.rs
@@ -150,6 +160,45 @@
 │   │   │   ├── main.rs
 │   │   │   └── runtime.rs
 │   │   └── Cargo.toml
+│   ├── diz
+│   │   ├── lang
+│   │   │   └── it
+│   │   │       └── filter_words.sson
+│   │   ├── src
+│   │   │   ├── lib.rs
+│   │   │   └── main.rs
+│   │   ├── build.rs
+│   │   ├── Cargo.toml
+│   │   ├── diz_data.json
+│   │   ├── diz.sson
+│   │   ├── HOW_DO.md
+│   │   └── README.md
+│   ├── morph
+│   │   ├──  lang
+│   │   │   └── it
+│   │   │       ├── aff.sson
+│   │   │       └── config.sson
+│   │   ├── src
+│   │   │   ├── bin
+│   │   │   │   └── morph_export.rs
+│   │   │   ├── adj.rs
+│   │   │   ├── export.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── noun.rs
+│   │   │   ├── README.md
+│   │   │   └── verb.rs
+│   │   ├── src1
+│   │   │   ├── adj_extractor.rs
+│   │   │   ├── aff_parser.rs
+│   │   │   ├── dic_parser.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── morph_export.rs
+│   │   │   ├── noun_extractor.rs
+│   │   │   ├── sson_export.rs
+│   │   │   └── verb_extractor.rs
+│   │   ├── Cargo.toml
+│   │   ├── wikipedia_spec.sson
+│   │   └── wikipedia.sson
 │   ├── obj
 │   │   ├── src
 │   │   │   ├── lib.rs
@@ -391,6 +440,21 @@
 │   ├── patch.js
 │   ├── README.md
 │   └── test_split.txt
+├── wiki_extract
+│   ├── src
+│   │   ├── bin
+│   │   │   └── wiki_extract.rs
+│   │   ├── checkpoint.rs
+│   │   ├── dic_parser.rs
+│   │   ├── extractor.rs
+│   │   ├── fast_extractor.rs
+│   │   ├── flag_map.rs
+│   │   ├── lib.rs
+│   │   ├── namespace_filter.rs
+│   │   └── storage.rs
+│   ├── Cargo.toml
+│   ├── index_pages.sson
+│   └── wiki_name_spaces.sson
 ├── AI_DECISIONS.txt
 ├── AI_INDEX.txt
 ├── AI_NAMING.txt
@@ -410,4 +474,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-81 directories, 330 files
+96 directories, 379 files
