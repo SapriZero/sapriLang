@@ -277,6 +277,7 @@ fn get_default_grammar() -> GrammarConfig {
     GrammarConfig { sections }
 }
 
+
 fn get_default_type_mapping() -> HashMap<String, String> {
     let mut map = HashMap::new();
     map.insert("s".to_string(), "String".to_string());
@@ -284,6 +285,7 @@ fn get_default_type_mapping() -> HashMap<String, String> {
     map.insert("b".to_string(), "bool".to_string());
     map.insert("usize".to_string(), "usize".to_string());
     map.insert("u64".to_string(), "u64".to_string());
+    map.insert("i32".to_string(), "i32".to_string());
     map
 }
 

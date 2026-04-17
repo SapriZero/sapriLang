@@ -32,25 +32,20 @@ impl CodeGenerator {
     pub fn generate(&self, content: &str) -> Result<String, String> {
         let mut output = String::new();
         
-        // Header
         if let Some(header) = self.templates.get("file_header") {
             output.push_str(&self.render_template(header));
             output.push('\n');
         }
         
-        // Parsa le sezioni
+        // Aggiungi import per _impl
+        output.push_str("use super::_impl;\n\n");
+        
         let sections = self.parse_sections(content);
         
-        // Genera struct
         output.push_str(&self.generate_structs(&sections)?);
-        
-        // Genera enum
         output.push_str(&self.generate_enums(&sections)?);
-        
-        // Genera impl
         output.push_str(&self.generate_impls(&sections)?);
         
-        // Footer
         if let Some(footer) = self.templates.get("file_footer") {
             output.push_str(&self.render_template(footer));
         }
@@ -58,57 +53,34 @@ impl CodeGenerator {
         Ok(output)
     }
     
-	    /// Genera codice Rust dal contenuto di un file .sson (versione senza path)
-	pub fn generate_from_content(&self, content: &str) -> Result<String, String> {
-	    let mut output = String::new();
-	    
-	    // Header
-	    if let Some(header) = self.templates.get("file_header") {
-	        output.push_str(&self.render_template(header));
-	        output.push('\n');
-	    }
-	    
-	    // Parsa le sezioni
-	    let sections = self.parse_sections(content);
-	    
-	    // Genera struct
-	    output.push_str(&self.generate_structs(&sections)?);
-	    
-	    // Genera enum
-	    output.push_str(&self.generate_enums(&sections)?);
-	    
-	    // Genera impl
-	    output.push_str(&self.generate_impls(&sections)?);
-	    
-	    // Footer
-	    if let Some(footer) = self.templates.get("file_footer") {
-	        output.push_str(&self.render_template(footer));
-	    }
-	    
-	    Ok(output)
-	}
-	
-	/// Genera codice Rust da un file .sson e lo salva su disco
-	/// Non sovrascrive i file _impl.rs
-	pub fn generate_to_file(&self, input_path: &Path, output_dir: &Path) -> Result<(), String> {
-	    let stem = input_path.file_stem().unwrap().to_string_lossy();
-	    let output_path = output_dir.join(format!("{}.rs", stem));
-	    
-	    // Non sovrascrivere i file _impl.rs
-	    if output_path.exists() && stem.to_string().ends_with("_impl") {
-	        println!("  ⏭️ Skipping existing impl file: {:?}", output_path);
-	        return Ok(());
-	    }
-	    
-	    let content = std::fs::read_to_string(input_path)
-	        .map_err(|e| e.to_string())?;
-	    
-	    let rust_code = self.generate_from_content(&content)?;
-	    
-	    std::fs::write(&output_path, rust_code)
-	        .map_err(|e| e.to_string())
-	}	
+    pub fn generate_from_content(&self, content: &str) -> Result<String, String> {
+        self.generate(content)
+    }
     
+    pub fn generate_to_file(&self, input_path: &Path, output_dir: &Path) -> Result<(), String> {
+        let stem = input_path.file_stem().unwrap().to_string_lossy();
+        let output_path = output_dir.join(format!("{}.rs", stem));
+        let impl_path = output_dir.join(format!("{}_impl.rs", stem));
+        
+        // Genera il file principale
+        let content = std::fs::read_to_string(input_path)
+            .map_err(|e| e.to_string())?;
+        let rust_code = self.generate_from_content(&content)?;
+        std::fs::write(&output_path, rust_code)
+            .map_err(|e| e.to_string())?;
+        
+        // Genera il file _impl.rs se non esiste
+        if !impl_path.exists() {
+            let sections = self.parse_sections(&content);
+            let functions = self.extract_functions(&sections);
+            let impl_code = generate_impl_skeleton(&stem, functions);
+            std::fs::write(&impl_path, impl_code)
+                .map_err(|e| e.to_string())?;
+            println!("  📝 Creato skeleton impl: {:?}", impl_path);
+        }
+        
+        Ok(())
+    }
     
     fn parse_sections(&self, content: &str) -> HashMap<String, Vec<(String, HashMap<String, String>)>> {
         let mut result: HashMap<String, Vec<(String, HashMap<String, String>)>> = HashMap::new();
@@ -122,14 +94,12 @@ impl CodeGenerator {
             if line.is_empty() || line.starts_with('#') { continue; }
             
             if line.starts_with('[') && line.ends_with(']') {
-                // Salva sezione precedente
                 if in_section && !current_name.is_empty() {
                     result.entry(current_type.clone())
                         .or_insert_with(Vec::new)
                         .push((current_name.clone(), current_fields.clone()));
                 }
                 
-                // Nuova sezione
                 let section = &line[1..line.len()-1];
                 in_section = true;
                 current_fields.clear();
@@ -149,7 +119,6 @@ impl CodeGenerator {
             }
         }
         
-        // Ultima sezione
         if in_section && !current_name.is_empty() {
             result.entry(current_type)
                 .or_insert_with(Vec::new)
@@ -159,12 +128,63 @@ impl CodeGenerator {
         result
     }
     
+    fn extract_functions(&self, sections: &HashMap<String, Vec<(String, HashMap<String, String>)>>) -> Vec<(String, String, bool)> {
+        let mut functions = Vec::new();
+        
+        if let Some(impls) = sections.get("impl") {
+            let mut impl_data: HashMap<String, HashMap<String, String>> = HashMap::new();
+            
+            for (name, funcs) in impls {
+                let entry = impl_data.entry(name.clone()).or_insert_with(HashMap::new);
+                for (k, v) in funcs {
+                    entry.insert(k.clone(), v.clone());
+                }
+            }
+            
+            for (_, data) in impl_data {
+                if let Some(functions_value) = data.get("functions") {
+                    for func_name in functions_value.split(',').map(|s| s.trim()) {
+                        let func_name = func_name.trim_matches('"');
+                        if func_name.is_empty() {
+                            continue;
+                        }
+                        
+                        let params_key = format!("{}.params", func_name);
+                        let static_key = format!("{}.is_static", func_name);
+                        
+                        let params = data.get(&params_key)
+                            .or_else(|| data.get("params"))
+                            .map(|s| s.clone())
+                            .unwrap_or_else(|| "".to_string());
+                        
+                        let is_static = data.get(&static_key)
+                            .or_else(|| data.get("is_static"))
+                            .map(|s| s == "true")
+                            .unwrap_or(false);
+                        
+                        functions.push((func_name.to_string(), params, is_static));
+                    }
+                }
+            }
+        }
+        
+        functions
+    }
+    
     fn generate_structs(&self, sections: &HashMap<String, Vec<(String, HashMap<String, String>)>>) -> Result<String, String> {
         let mut output = String::new();
+        let mut struct_data: HashMap<String, HashMap<String, String>> = HashMap::new();
         
         if let Some(structs) = sections.get("struct") {
             for (name, fields) in structs {
-                let derive = fields.get("derive").cloned().unwrap_or_else(|| "Debug, Clone".to_string());
+                let entry = struct_data.entry(name.clone()).or_insert_with(HashMap::new);
+                for (k, v) in fields {
+                    entry.insert(k.clone(), v.clone());
+                }
+            }
+            
+            for (name, data) in struct_data {
+                let derive = data.get("derive").cloned().unwrap_or_else(|| "Debug, Clone".to_string());
                 let template = self.rules.get("struct").cloned()
                     .unwrap_or_else(|| "#[derive({derive})]\npub struct {name} {{\n{fields}\n}}\n".to_string());
                 
@@ -172,26 +192,19 @@ impl CodeGenerator {
                 let field_template = self.rules.get("struct.field").cloned()
                     .unwrap_or_else(|| "    pub {name}: {type_},\n".to_string());
                 
-                // Cerca i campi
-                for (key, value) in fields {
-                    if key == "fields" {
-                        for line in value.lines() {
-                            if let Some((fname, ftype)) = line.split_once(':') {
-                                let fname = fname.trim();
-                                let ftype = ftype.trim();
-                                let rust_type = self.map_type(ftype);
-                                let code = field_template
-                                    .replace("{name}", fname)
-                                    .replace("{type_}", &rust_type);
-                                fields_str.push_str(&code);
-                            }
-                        }
+                for (field_name, field_type) in data {
+                    if field_name != "derive" {
+                        let rust_type = self.map_type(&field_type);
+                        let code = field_template
+                            .replace("{name}", &field_name)
+                            .replace("{type_}", &rust_type);
+                        fields_str.push_str(&code);
                     }
                 }
                 
                 let code = template
                     .replace("{derive}", &derive)
-                    .replace("{name}", name)
+                    .replace("{name}", &name)
                     .replace("{fields}", &fields_str);
                 output.push_str(&code);
                 output.push('\n');
@@ -203,9 +216,15 @@ impl CodeGenerator {
     
     fn generate_enums(&self, sections: &HashMap<String, Vec<(String, HashMap<String, String>)>>) -> Result<String, String> {
         let mut output = String::new();
+        let mut generated_names = std::collections::HashSet::new();
         
         if let Some(enums) = sections.get("enum") {
             for (name, variants) in enums {
+                if generated_names.contains(name) {
+                    continue;
+                }
+                generated_names.insert(name.clone());
+                
                 let derive = variants.get("derive").cloned().unwrap_or_else(|| "Debug, Clone".to_string());
                 let template = self.rules.get("enum").cloned()
                     .unwrap_or_else(|| "#[derive({derive})]\npub enum {name} {{\n{variants}\n}}\n".to_string());
@@ -214,14 +233,12 @@ impl CodeGenerator {
                 let variant_template = self.rules.get("enum.variant").cloned()
                     .unwrap_or_else(|| "    {name},\n".to_string());
                 
-                for (key, value) in variants {
-                    if key == "variants" {
-                        for line in value.lines() {
-                            let variant = line.trim();
-                            if !variant.is_empty() {
-                                let code = variant_template.replace("{name}", variant);
-                                variants_str.push_str(&code);
-                            }
+                if let Some(variants_value) = variants.get("variants") {
+                    for line in variants_value.lines() {
+                        let variant = line.trim();
+                        if !variant.is_empty() {
+                            let code = variant_template.replace("{name}", variant);
+                            variants_str.push_str(&code);
                         }
                     }
                 }
@@ -238,50 +255,84 @@ impl CodeGenerator {
         Ok(output)
     }
     
-    fn generate_impls(&self, sections: &HashMap<String, Vec<(String, HashMap<String, String>)>>) -> Result<String, String> {
-        let mut output = String::new();
-        
-        if let Some(impls) = sections.get("impl") {
-            for (name, funcs) in impls {
-                let template = self.rules.get("impl").cloned()
-                    .unwrap_or_else(|| "impl {name} {{\n{functions}\n}}\n".to_string());
-                let func_template = self.rules.get("impl.function").cloned()
-                    .unwrap_or_else(|| "    pub fn {name}({params}) -> {return_type} {{\n        todo!()\n    }}\n".to_string());
-                
-                let mut functions_str = String::new();
-                
-                for (key, value) in funcs {
-                    if key == "functions" {
-                        for line in value.lines() {
-                            if let Some((func_name, rest)) = line.split_once('(') {
-                                let func_name = func_name.trim();
-                                if let Some((params, rest2)) = rest.split_once(')') {
-                                    let return_type = if let Some(ret) = rest2.split_once("->") {
-                                        ret.1.trim()
-                                    } else {
-                                        "()"
-                                    };
-                                    let code = func_template
-                                        .replace("{name}", func_name)
-                                        .replace("{params}", params)
-                                        .replace("{return_type}", return_type);
-                                    functions_str.push_str(&code);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                let code = template
-                    .replace("{name}", name)
-                    .replace("{functions}", &functions_str);
-                output.push_str(&code);
-                output.push('\n');
-            }
-        }
-        
-        Ok(output)
-    }
+	fn generate_impls(&self, sections: &HashMap<String, Vec<(String, HashMap<String, String>)>>) -> Result<String, String> {
+	    let mut output = String::new();
+	    let mut impl_data: HashMap<String, HashMap<String, String>> = HashMap::new();
+	    
+	    if let Some(impls) = sections.get("impl") {
+	        for (name, funcs) in impls {
+	            let entry = impl_data.entry(name.clone()).or_insert_with(HashMap::new);
+	            for (k, v) in funcs {
+	                entry.insert(k.clone(), v.clone());
+	            }
+	        }
+	        
+	        for (name, data) in impl_data {
+	            output.push_str(&format!("impl {} {{\n", name));
+	            
+	            if let Some(functions_value) = data.get("functions") {
+	                for func_name in functions_value.split(',').map(|s| s.trim()) {
+	                    let func_name = func_name.trim_matches('"');
+	                    if func_name.is_empty() {
+	                        continue;
+	                    }
+	                    
+	                    let params = data.get(&format!("{}.params", func_name))
+	                        .or_else(|| data.get("params"))
+	                        .map(|s| s.as_str())
+	                        .unwrap_or("");
+	                    
+	                    let return_type = data.get(&format!("{}.return_type", func_name))
+	                        .or_else(|| data.get("return_type"))
+	                        .map(|s| s.as_str())
+	                        .unwrap_or("()");
+	                    
+	                    let is_static = data.get(&format!("{}.is_static", func_name))
+	                        .or_else(|| data.get("is_static"))
+	                        .map(|s| s == "true")
+	                        .unwrap_or(false);
+	                    
+	                    if is_static {
+	                        // Funzione statica (new, with_max_size)
+	                        output.push_str(&format!(
+	                            "    pub fn {}({}) -> {} {{\n        _impl::{}({})\n    }}\n",
+	                            func_name, params, return_type,
+	                            func_name, extract_params_for_call(params)
+	                        ));
+	                    } else {
+	                        // Metodo con self (remember, recall)
+	                        let remaining = if params.contains(',') {
+	                            params.splitn(2, ',').nth(1).unwrap_or("").trim()
+	                        } else {
+	                            ""
+	                        };
+	                        
+	                        let self_type = if params.contains("&mut self") { "&mut self" } else { "&self" };
+	                        
+	                        let self_decl = if remaining.is_empty() {
+	                            format!("{}", self_type)
+	                        } else {
+	                            format!("{}, {}", self_type, remaining)
+	                        };
+	                        
+	                        output.push_str(&format!(
+	                            "    pub fn {}({}) -> {} {{\n        _impl::{}(self, {})\n    }}\n",
+	                            func_name,
+	                            self_decl,
+	                            return_type,
+	                            func_name,
+	                            extract_params_for_call(remaining)
+	                        ));
+	                    }
+	                }
+	            }
+	            
+	            output.push_str("}\n\n");
+	        }
+	    }
+	    
+	    Ok(output)
+	}
     
     fn map_type(&self, sson_type: &str) -> String {
         self.type_mapping.get(sson_type)
@@ -293,4 +344,82 @@ impl CodeGenerator {
         let timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
         template.replace("{timestamp}", &timestamp)
     }
+}
+
+// Helper per estrarre i nomi dei parametri per la chiamata
+fn extract_params_for_call(params: &str) -> String {
+    if params.is_empty() {
+        return String::new();
+    }
+    
+    let parts: Vec<&str> = params.split(',').map(|p| p.trim()).collect();
+    let call_params: Vec<String> = parts.iter()
+        .map(|p| {
+            // Estrae solo il nome del parametro (senza tipo)
+            let name = p.split(':').next().unwrap_or(p).trim();
+            name.to_string()
+        })
+        .collect();
+    
+    call_params.join(", ")
+}
+
+// Genera lo skeleton per il file _impl.rs
+fn generate_impl_skeleton(stem: &str, functions: Vec<(String, String, bool)>) -> String {
+    let struct_name = to_pascal_case(stem);
+    
+    let mut functions_code = String::new();
+    
+    for (func_name, params, is_static) in functions {
+        if is_static {
+            let return_type = if func_name == "new" { struct_name.clone() } else { "Self".to_string() };
+            functions_code.push_str(&format!(
+                "pub fn {}({}) -> {} {{\n    todo!(\"Implementare {}::{}\")\n}}\n\n",
+                func_name, params, return_type, struct_name, func_name
+            ));
+        } else {
+            // Metodo con self
+            let self_decl = if params.is_empty() {
+			    "&mut self".to_string()
+			} else {
+			    format!("&mut self, {}", params)
+			};
+            functions_code.push_str(&format!(
+                "pub fn {}({}) -> () {{\n    todo!(\"Implementare {}::{}\")\n}}\n\n",
+                func_name, self_decl, struct_name, func_name
+            ));
+        }
+    }
+    
+    format!(
+        r#"//! Implementazioni reali per {struct_name}
+//! Modifica le implementazioni qui.
+
+use super::{stem}::{struct_name};
+
+// ============================================
+// IMPLEMENTAZIONI
+// ============================================
+
+{}
+"#,
+        functions_code
+    )
+}
+
+// Helper per convertire snake_case in PascalCase
+fn to_pascal_case(s: &str) -> String {
+    let mut result = String::new();
+    let mut capitalize_next = true;
+    for c in s.chars() {
+        if c == '_' {
+            capitalize_next = true;
+        } else if capitalize_next {
+            result.push(c.to_ascii_uppercase());
+            capitalize_next = false;
+        } else {
+            result.push(c);
+        }
+    }
+    result
 }
