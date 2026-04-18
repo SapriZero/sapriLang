@@ -1,6 +1,5 @@
 // wiki_extract/src/dic_parser.rs
-
-use std::collections::HashMap;
+use crate::flag_map::get_flag_map; 
 use std::fs;
 
 pub struct DicEntry {

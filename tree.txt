@@ -11,12 +11,25 @@
 │   ├── data
 │   │   ├── data
 │   │   │   ├── data
+│   │   │   │   ├── articles.sson
+│   │   │   │   ├── categories.sson
+│   │   │   │   ├── checkpoint.json
+│   │   │   │   ├── portals.sson
+│   │   │   │   ├── projects.sson
+│   │   │   │   ├── redirects.sson
+│   │   │   │   ├── result_elab.txt
+│   │   │   │   └── templates.sson
+│   │   │   ├── it_IT.aff
+│   │   │   ├── it_IT.dic
+│   │   │   ├── itwiki-latest-pages-articles.xml.bz2
+│   │   │   └── wiki-extract
+│   │   ├── data.old
+│   │   │   ├── data
 │   │   │   │   ├── checkpoint.json
 │   │   │   │   ├── nouns.sson
 │   │   │   │   ├── verbs.sson
 │   │   │   │   └── words.sson
 │   │   │   ├── checkpoint.json
-│   │   │   ├── itwiki-latest-pages-articles.xml.bz2
 │   │   │   └── wiki-extract
 │   │   ├── italiano_2_4_2007_09_01
 │   │   │   ├── it_IT.aff
@@ -174,6 +187,9 @@
 │   │   ├── HOW_DO.md
 │   │   └── README.md
 │   ├── morph
+│   │   ├── data
+│   │   │   ├── it_IT.aff
+│   │   │   └── it_IT.dic
 │   │   ├──  lang
 │   │   │   └── it
 │   │   │       ├── aff.sson
@@ -185,18 +201,10 @@
 │   │   │   ├── export.rs
 │   │   │   ├── lib.rs
 │   │   │   ├── noun.rs
-│   │   │   ├── README.md
 │   │   │   └── verb.rs
-│   │   ├── src1
-│   │   │   ├── adj_extractor.rs
-│   │   │   ├── aff_parser.rs
-│   │   │   ├── dic_parser.rs
-│   │   │   ├── lib.rs
-│   │   │   ├── morph_export.rs
-│   │   │   ├── noun_extractor.rs
-│   │   │   ├── sson_export.rs
-│   │   │   └── verb_extractor.rs
 │   │   ├── Cargo.toml
+│   │   ├── map_WORDS.md
+│   │   ├── README2.md
 │   │   ├── wikipedia_spec.sson
 │   │   └── wikipedia.sson
 │   ├── obj
@@ -310,29 +318,30 @@
 │   │   ├── TODO.md
 │   │   ├── TODO.sson
 │   │   └── validatori.md
-│   └── sson.old
-│       ├── src
-│       │   ├── error_impl.rs
-│       │   ├── lib.rs
-│       │   ├── obj_adapter_impl.rs
-│       │   ├── registry_impl.rs
-│       │   ├── resolver_impl.rs
-│       │   ├── state_machine_impl.rs
-│       │   └── validator_impl.rs
-│       ├── tests
-│       │   ├── integration_test.rs
-│       │   └── tests.txt
-│       ├── ai_learn_sson.md
-│       ├── Cargo.toml
-│       ├── cod_generatore.md
-│       ├── CRATE.md
-│       ├── spec.sson
-│       ├── stati_diagram.md
-│       ├── struct.txt
-│       ├── TODO2.sson
-│       ├── TODO.md
-│       ├── TODO.sson
-│       └── validatori.md
+│   ├── sson.old
+│   │   ├── src
+│   │   │   ├── error_impl.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── obj_adapter_impl.rs
+│   │   │   ├── registry_impl.rs
+│   │   │   ├── resolver_impl.rs
+│   │   │   ├── state_machine_impl.rs
+│   │   │   └── validator_impl.rs
+│   │   ├── tests
+│   │   │   ├── integration_test.rs
+│   │   │   └── tests.txt
+│   │   ├── ai_learn_sson.md
+│   │   ├── Cargo.toml
+│   │   ├── cod_generatore.md
+│   │   ├── CRATE.md
+│   │   ├── spec.sson
+│   │   ├── stati_diagram.md
+│   │   ├── struct.txt
+│   │   ├── TODO2.sson
+│   │   ├── TODO.md
+│   │   ├── TODO.sson
+│   │   └── validatori.md
+│   └── README.md
 ├── core-data
 │   ├── src
 │   │   ├── flatten
@@ -447,9 +456,9 @@
 │   │   ├── checkpoint.rs
 │   │   ├── dic_parser.rs
 │   │   ├── extractor.rs
-│   │   ├── fast_extractor.rs
 │   │   ├── flag_map.rs
 │   │   ├── lib.rs
+│   │   ├── models.rs
 │   │   ├── namespace_filter.rs
 │   │   └── storage.rs
 │   ├── Cargo.toml
@@ -474,4 +483,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-96 directories, 379 files
+98 directories, 386 files
