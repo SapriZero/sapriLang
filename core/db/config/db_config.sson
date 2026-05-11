@@ -1,0 +1,16 @@
+# ============================================
+# DB_CONFIG.SSON
+# Configurazione del crate sapri_db
+# ============================================
+
+[db] version_s, default_index_bits_n, max_table_bits_n
+    1.0, 16, 32
+
+[db.paths] schema_path_s, data_path_s, binary_path_s
+    "core/sson/spec/db_schema.sson", "data/", "data/database.bin"
+
+[db.options] auto_flat_b, auto_index_b, strict_mode_b
+    true, true, false
+
+[db.cache] max_tables_n, max_records_per_table_n
+    1024, 65536

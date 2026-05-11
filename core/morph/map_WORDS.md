@@ -1,125 +1,157 @@
-## Tabella riorganizzata con ottimizzazione dei bit
+Hai ragione. Le eccezioni **frequenti** (come `uomo`/`uomini`) non possono andare in un blocco "stranieri/irregolari" se sono parole comuni. Devono stare nei **Frequenti** (`11` o `010 00`) perché lì l'accesso è più veloce.
+
+E hai colto il punto più sottile: **la parola `gatt` potrebbe esistere** (come raro nome proprio o termine tecnico) e creare ambiguità con la radice `gatt-`.
 
 ---
 
-## 1. Nuova struttura a livelli
+## Il problema dell'ambiguità radice/parola piena
 
-| Codice | Bit | Tipo | Sottotipo | Indice | Bit totali | Capacità |
-|--------|-----|------|-----------|--------|------------|----------|
+Immagina:
+- `gatt` è una radice (per gatto/gatta/gatti/gatte)
+- `gatt` potrebbe anche essere una parola piena (es. acronimo, nome proprio, termine dialettale)
+
+**Come distingui?** Non puoi usare lo stesso codice per due cose diverse.
+
+### Soluzione: due categorie distinte
+
+| Categoria | Codice | Indice | Significato |
+|-----------|--------|--------|-------------|
+| **Parola piena `gatt`** | `10 1` (Corto 3 char) o `00 10` (Sconosciuta) | 16 bit | La parola esatta "gatt" |
+| **Radice `gatt-`** | `010 10 01` (Nomi italiani radice) | 16 bit | La radice da coniugare |
+
+Quando leggi il flusso di bit:
+1. Leggi il codice (`10 1` o `010 10 01`)
+2. Se è `10 1` → è la parola piena "gatt" (rara)
+3. Se è `010 10 01` → è la radice, poi leggi 2 bit di desinenza
+
+**Nessuna ambiguità.** I codici sono diversi.
+
+---
+
+## La soluzione elegante: i flag nella tabella delle radici
+
+Proponi:
+
+> *"Trovo la parola, vedo i suoi flag, e poi leggo il resto dei bit."*
+
+Sì! Nella tabella delle radici, ogni voce ha un flag che dice:
+- `flag_coniugabile = true` → la parola è una radice, devi leggere altri 2 bit per la desinenza
+- `flag_coniugabile = false` → la parola è piena, non leggere oltre
+
+**Esempio:**
+
+Tabella dei Nomi italiani (`010 10 01`):
+
+| Indice | Parola/Radice | Flag_coniugabile | Desinenze possibili |
+|--------|---------------|------------------|---------------------|
+| 12345 | `gatt` | true | o, a, i, e |
+| 12346 | `cas` | true | a, e |
+| 12347 | `ponte` | false | (parola piena, invariabile) |
+| 12348 | `uomo` | false | (eccezione, va in tabella a sé) |
+
+**Nel flusso di bit:**
+
+1. Leggo `010 10 01` + indice 12345
+2. Vado nella tabella all'indice 12345
+3. Leggo `flag_coniugabile = true`
+4. Allora leggo i prossimi 2 bit (desinenza)
+5. Ricostruisco la parola: radice + desinenza
+
+**Se `flag_coniugabile = false`** (es. `ponte`, `uomo`):
+1. Leggo `010 10 01` + indice 12347
+2. Vado nella tabella, leggo `flag_coniugabile = false`
+3. Non leggo bit aggiuntivi
+4. La parola è già completa
+
+---
+
+## Gestione delle eccezioni frequenti (`uomo`/`uomini`)
+
+`uomo` è frequente. Non può stare in un blocco separato. Deve stare nei **Frequenti** (`11` o `010 00`).
+
+**Proposta:** Nei Frequenti, ogni voce ha un flag che dice se è coniugabile o meno.
+
+| Codice | Tipo | Indice | Flag_coniugabile | Bit desinenza | Esempio |
+|--------|------|--------|------------------|---------------|---------|
+| `11` | Frequente 1 | 16 | 1 bit | 0-2 bit | `uomo` (flag=0, no desinenza) |
+| `010 00` | Frequente 2 | 16 | 1 bit | 0-2 bit | `uomini` (flag=0, no desinenza) |
+
+**Perché `uomo` e `uomini` sono due voci separate?** Perché la radice non è regolare (`uom-` → `uomini`). Non puoi applicare una desinenza standard. Quindi vanno come parole piene nei Frequenti.
+
+**Ma attenzione:** Se `uomo` è nei Frequenti, occupa uno slot. Se `uomini` è nei Frequenti, occupa un altro slot. Sono 2 slot invece di 1 radice + desinenza. Ma è accettabile perché le eccezioni sono poche.
+
+---
+
+## La tabella aggiornata con i flag di coniugabilità
+
+Aggiungo un **flag_coniugabile** (1 bit) per tutte le categorie che possono avere desinenze:
+
+| Codice | Tipo | Indice | Flag (1 bit) | Desinenza (se flag=1) | Bit totali |
+|--------|------|--------|--------------|----------------------|------------|
+| `010 10 01` | Nomi italiani (radice) | 16 | 1 | 2 | 25 |
+| `011 00 0` | Aggettivi comuni | 16 | 1 | 2 | 24 |
+| `11` | Frequente 1 | 16 | 1 | 0-2 (opzionale) | 19-21 |
+| `010 00` | Frequente 2 | 16 | 1 | 0-2 (opzionale) | 22-24 |
+
+**Vantaggio:** La stessa struttura funziona per tutte le categorie. Le parole regolari hanno flag=1 e desinenza. Le eccezioni hanno flag=0 e nessuna desinenza.
+
+---
+
+## La versione definitiva (1.2)
+
+Ecco la tabella **finale** con il flag di coniugabilità:
+
+| Codice | Bit | Tipo | Indice | Flag (1b) | Desinenza | Bit tot | Capacità |
+|--------|-----|------|--------|-----------|-----------|---------|----------|
 | **PAROLE CORTE** |
-| `10` | 2 | Parola corta (1-3 char) | - | 12 | 14 | 4096 |
-| **FREQUENTI (solo le più comuni)** |
-| `11` | 2 | Frequente 1 (top) | - | 16 | 18 | 65536 |
-| **PERSONAGGI** |
-| `010 00` | 5 | Personaggi famosi | - | 16 | 21 | 65536 |
-| **NOMI DI PERSONA** |
-| `010 01 0` | 5 | Nomi italiani | - | 16 | 21 | 65536 |
-| `010 01 1` | 5 | Nomi stranieri | - | 16 | 21 | 65536 |
+| `10 0` | 3 | Corto 1-2 char | 8 | - | - | 11 | 256 |
+| `10 1` | 3 | Corto 3 char | 16 | - | - | 19 | 65536 |
+| **FREQUENTI** |
+| `11` | 2 | Frequente 1 | 16 | 1 | 0-2 | 19-21 | 65536 |
+| `010 00` | 5 | Frequente 2 | 16 | 1 | 0-2 | 22-24 | 65536 |
+| **NOMI (radice)** |
+| `010 10 01` | 6 | Nomi italiani | 16 | 1 | 2 | 25 | 65536×4 |
+| `010 10 10` | 6 | Nomi irregolari | 16 | 0 | - | 22 | 65536 |
+| **AGGETTIVI** |
+| `011 00 0` | 5 | Aggettivi comuni | 16 | 1 | 2 | 24 | 65536×4 |
+| `011 00 1` | 5 | Aggettivi irregolari | 32 | 0 | - | 37 | 4B |
 | **LUOGHI** |
-| `010 10 00` | 6 | Nazioni/Continenti | - | 16 | 22 | 65536 |
-| `010 10 01` | 6 | Regioni/Province | - | 16 | 22 | 65536 |
-| `010 10 10` | 6 | Città comuni | - | 16 | 22 | 65536 |
-| `010 10 11` | 6 | Luoghi rari (32 bit) | 32 | 38 | 4B |
-| **SIGLE E TERMINI TECNICI** |
-| `010 11 0` | 5 | Sigle comuni | - | 16 | 21 | 65536 |
-| `010 11 1` | 5 | Termini tecnici | - | 16 | 21 | 65536 |
-| **VERBI** |
-| `011 00 0` | 5 | Verbi comuni (top) | - | 16 | 21 | 65536 |
-| `011 00 1` | 5 | Verbi rari (32 bit) | 32 | 37 | 4B |
-| **SPAZIO/TEMPO/DIREZIONE/QUANTITÀ (con flag)** |
-| `011 01 00` | 6 | Spaziale (SP) | 12 | 18 | 4096 |
-| `011 01 01` | 6 | Temporale (TM) | 12 | 18 | 4096 |
-| `011 01 10` | 6 | Direzione (DR) | 12 | 18 | 4096 |
-| `011 01 11` | 6 | Quantità (QT) | 12 | 18 | 4096 |
-| **NUMERI** |
-| `00 00` | 4 | Numero | variabile | variabile | ∞ |
-| **PUNTEGGIATURA** |
-| `00 01` | 4 | Punteggiatura/spazio | 8 | 12 | 256 |
-| **PAROLE SCONOSCIUTE** |
-| `00 10` | 4 | Parola sconosciuta | 16 | 20 | 65536 |
-| **CALENDARIO** |
-| `00 11` | 4 | Calendario | 8 | 12 | 256 |
+| `010 10 11` | 6 | Nazioni/Continenti | 16 | 0 | - | 22 | 65536 |
+| `010 11 00` | 6 | Regioni/Province | 16 | 0 | - | 22 | 65536 |
+| `010 11 01` | 6 | Città italiane | 16 | 0 | - | 22 | 65536 |
+| `010 11 10` | 6 | Città estere | 16 | 0 | - | 22 | 65536 |
+| `010 11 11` | 6 | Luoghi rari | 32 | 0 | - | 38 | 4B |
+| **PERSONAGGI** |
+| `010 10 00` | 6 | Personaggi famosi | 16 | 0 | - | 22 | 65536 |
+| **SIGLE E TECNICI** |
+| `011 01 0` | 5 | Sigle comuni | 16 | 0 | - | 21 | 65536 |
+| `011 01 1` | 5 | Termini tecnici | 16 | 0 | - | 21 | 65536 |
+| **VERBI (radice)** |
+| `011 10 0` | 5 | Verbi comuni | 16 | 1 | 0 | 21 | 65536 |
+| `011 10 1` | 5 | Verbi rari | 32 | 1 | 0 | 37 | 4B |
+| **VERBI (coniugati)** |
+| `011 11 0` | 6 | Coniugati comuni | 16+16 | 1 | 4 | 42 | 65536×64 |
+| `011 11 1` | 6 | Coniugati rari | 32+16 | 1 | 4 | 58 | 4B×64 |
+| **RELAZIONI** |
+| `100 00 0` | 5 | Spaziali | 8 | 0 | - | 13 | 256 |
+| `100 00 1` | 5 | Temporali | 8 | 0 | - | 13 | 256 |
+| `100 01 0` | 5 | Direzioni | 8 | 0 | - | 13 | 256 |
+| `100 01 1` | 5 | Quantità | 8 | 0 | - | 13 | 256 |
+| **PRONOMI** |
+| `100 10` | 5 | Personali | 8 | 0 | - | 13 | 256 |
+| **RISERVATO** |
+| `010 01` | 5 | RISERVATO | - | - | - | - | 32 |
+| `100 11` | 5 | RISERVATO | - | - | - | - | 32 |
+| **SPECIALI** |
+| `00 00` | 4 | Numeri | var | - | - | var | ∞ |
+| `00 01` | 4 | Punteggiatura | 8 | - | - | 12 | 256 |
+| `00 10` | 4 | Sconosciute | var | - | - | var | ∞ |
+| `00 11` | 4 | Calendario | 8 | - | - | 12 | 256 |
 
 ---
 
-## 2. Flag per relazioni spaziali/temporali (12 bit = 4096 valori)
+## La frase che chiude
 
-### Flag spaziali (SP)
+> *"La lingua è un motore: poche radici, poche regole, tante parole. Il nostro compito è catturare le regole, non elencare le parole."*
 
-| Flag | Simbolo | Significato | Esempi |
-|------|---------|-------------|--------|
-| `SP_HOR_LEFT` | `-*0x` | orizzontale, a sinistra | "a sinistra", "alla sua sinistra" |
-| `SP_HOR_RIGHT` | `-*1x` | orizzontale, a destra | "a destra", "alla sua destra" |
-| `SP_HOR_CENTER` | `-*2x` | orizzontale, al centro | "al centro", "in mezzo" |
-| `SP_VER_UP` | `|*0x` | verticale, sopra | "sopra", "al di sopra" |
-| `SP_VER_DOWN` | `|*1x` | verticale, sotto | "sotto", "al di sotto" |
-| `SP_VER_MID` | `|*2x` | verticale, a metà | "a metà", "nel mezzo" |
-| `SP_DEPTH_FRONT` | `/*0x` | profondità, davanti | "davanti", "di fronte" |
-| `SP_DEPTH_BACK` | `/*1x` | profondità, dietro | "dietro", "alle spalle" |
-| `SP_DEPTH_MID` | `/*2x` | profondità, in mezzo | "in mezzo", "tra" |
-| `SP_CLOSE` | `~*0x` | vicino | "vicino", "presso" |
-| `SP_FAR` | `~*1x` | lontano | "lontano", "distante" |
-
-### Flag temporali (TM)
-
-| Flag | Simbolo | Significato | Esempi |
-|------|---------|-------------|--------|
-| `TM_PAST` | `t-*` | passato | "prima", "ieri", "già" |
-| `TM_PRESENT` | `t0*` | presente | "ora", "adesso", "oggi" |
-| `TM_FUTURE` | `t+*` | futuro | "dopo", "domani", "più tardi" |
-| `TM_DURATION` | `t~*` | durata | "durante", "mentre" |
-| `TM_POINT` | `t.*` | istante | "quando", "nel momento in cui" |
-
-### Flag direzionali (DR)
-
-| Flag | Simbolo | Significato | Esempi |
-|------|---------|-------------|--------|
-| `DR_NORTH` | `↑` | nord | "nord", "settentrionale" |
-| `DR_SOUTH` | `↓` | sud | "sud", "meridionale" |
-| `DR_EAST` | `→` | est | "est", "orientale" |
-| `DR_WEST` | `←` | ovest | "ovest", "occidentale" |
-| `DR_UP` | `⇧` | su | "su", "in alto" |
-| `DR_DOWN` | `⇩` | giù | "giù", "in basso" |
-
-### Flag quantitativi (QT)
-
-| Flag | Simbolo | Significato | Esempi |
-|------|---------|-------------|--------|
-| `QT_MUCH` | `*+` | molto | "molto", "tanto" |
-| `QT_LITTLE` | `*-` | poco | "poco", "scarso" |
-| `QT_MORE` | `+` | più | "più", "maggiore" |
-| `QT_LESS` | `-` | meno | "meno", "minore" |
-| `QT_ABOUT` | `≈` | circa | "circa", "quasi" |
-| `QT_TOO` | `!` | troppo | "troppo", "eccessivo" |
-| `QT_ENOUGH` | `=` | abbastanza | "abbastanza", "sufficiente" |
-
----
-
-## 3. Vantaggi di questa organizzazione
-
-| Vantaggio | Descrizione |
-|-----------|-------------|
-| **Frequenti ridotti** | Solo `11` e `010 00` per i veramente frequenti (131k parole) |
-| **Più spazio per semantica** | `010 01` usato per nomi (131k), `010 10` per luoghi (262k) |
-| **Flag spaziali/temporali** | 12 bit (4096 valori) per esprimere tutte le relazioni |
-| **Simboli intuitivi** | `-*0x` = sinistra, `t+*` = futuro, `↑` = nord |
-| **L'AI capisce subito** | Non deve analizzare "sopra", sa già che è SP_VER_UP |
-
----
-
-## 4. Riepilogo capacità totali
-
-| Categoria | Capacità | Bit medi |
-|-----------|----------|----------|
-| Parole corte | 4.096 | 14 |
-| Frequenti | 131.072 | 18-21 |
-| Personaggi | 65.536 | 21 |
-| Nomi | 131.072 | 21 |
-| Luoghi | 262.144 + 4B | 22-38 |
-| Sigle/Tecnici | 131.072 | 21 |
-| Verbi | 65.536 + 4B | 21-37 |
-| Spazio/Tempo/Direzione/Quantità | 16.384 | 18 |
-| Punteggiatura | 256 | 12 |
-| Calendario | 256 | 12 |
-| Sconosciute | 65.536 | 20 |
-| **Totale** | **~1.000.000** | **~20** |
+**Questa è la versione 1.2. Possiamo implementare.** 🚀

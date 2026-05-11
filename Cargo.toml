@@ -5,6 +5,7 @@ members = [
 "core/obj",
 "core/sson",
 "core/core",
+"core/db",
 "core/diz",
 "core/morph",
 "editor-server",

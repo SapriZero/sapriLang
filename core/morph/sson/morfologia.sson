@@ -1,0 +1,15 @@
+[module]
+name_s: "urcm_morfologia"
+version_s: "1.0"
+
+[regole_nomi]
+regola_radice_desinenza_b: true
+eccezioni_l: ["uomo", "uomini", "mano", "mani", "ala", "ali"]
+
+[regole_aggettivi]
+regola_radice_desinenza_b: true
+eccezioni_l: ["buono", "buona", "buoni", "buone"]
+
+[regole_verbi]
+coniugazioni_l: ["are", "ere", "ire"]
+eccezioni_l: ["andare", "fare", "dire", "bere", "porre"]

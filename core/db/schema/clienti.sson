@@ -1,0 +1,30 @@
+# ============================================
+# CLIENTI.SSON
+# Definizione della tabella clienti (istanza dello schema)
+# ============================================
+
+# Usa lo schema db_schema.sson (implicito, o referenziato)
+
+[t.clienti] header_s, index_bits_n
+    10, 16
+
+[c.clienti.id] t
+    i
+
+[c.clienti.nome] t, max
+    s, 50
+
+[c.clienti.cognome] t, max
+    s, 50
+
+[c.clienti.eta] t, min, max
+    i, 0, 120
+
+[c.clienti.citta_id] t, ref
+    r, "citta.id"
+
+[c.clienti.attivo] t
+    b
+
+[i.clienti.nome_cognome] campi, tipo
+    "nome|cognome", hash

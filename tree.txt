@@ -173,6 +173,39 @@
 │   │   │   ├── main.rs
 │   │   │   └── runtime.rs
 │   │   └── Cargo.toml
+│   ├── db
+│   │   ├── config
+│   │   │   └── db_config.sson
+│   │   ├── schema
+│   │   │   └── clienti.sson
+│   │   ├── src
+│   │   │   ├── binary_impl.rs
+│   │   │   ├── binary.rs
+│   │   │   ├── database_impl.rs
+│   │   │   ├── database.rs
+│   │   │   ├── error_impl.rs
+│   │   │   ├── error.rs
+│   │   │   ├── flat_impl.rs
+│   │   │   ├── flat.rs
+│   │   │   ├── header_impl.rs
+│   │   │   ├── header.rs
+│   │   │   ├── join_impl.rs
+│   │   │   ├── join.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── loader_impl.rs
+│   │   │   ├── loader.rs
+│   │   │   ├── schema_impl.rs
+│   │   │   ├── schema.rs
+│   │   │   ├── table_impl.rs
+│   │   │   ├── table.rs
+│   │   │   ├── validator_impl.rs
+│   │   │   └── validator.rs
+│   │   ├── sson
+│   │   │   ├── db_modules.sson
+│   │   │   └── db_schema.sson
+│   │   ├── Cargo.toml
+│   │   ├── diz.sson
+│   │   └── HOW_DO.md
 │   ├── diz
 │   │   ├── lang
 │   │   │   └── it
@@ -202,9 +235,16 @@
 │   │   │   ├── lib.rs
 │   │   │   ├── noun.rs
 │   │   │   └── verb.rs
+│   │   ├── sson
+│   │   │   ├── coding_table.sson
+│   │   │   ├── desinenze.sson
+│   │   │   ├── diz.sson
+│   │   │   └── morfologia.sson
 │   │   ├── Cargo.toml
 │   │   ├── map_WORDS.md
 │   │   ├── README2.md
+│   │   ├── README.md
+│   │   ├── README_URCM_SPEC.md
 │   │   ├── wikipedia_spec.sson
 │   │   └── wikipedia.sson
 │   ├── obj
@@ -308,6 +348,7 @@
 │   │   │   ├── integration_test.rs
 │   │   │   └── tests.txt
 │   │   ├── ai_learn_sson.md
+│   │   ├── ATTENZIONE.md
 │   │   ├── Cargo.toml
 │   │   ├── cod_generatore.md
 │   │   ├── CRATE.md
@@ -483,4 +524,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-98 directories, 386 files
+104 directories, 421 files

@@ -1,0 +1,68 @@
+[module]
+name_s: "urcm_coding"
+version_s: "1.2"
+
+[coding_table]
+description_s: "URCM semantic compression table v1.2"
+
+[coding_table.codes]
+# PAROLE CORTE
+"10 0"_s: "corto_1_2_char"
+"10 1"_s: "corto_3_char"
+
+# FREQUENTI
+"11"_s: "frequente_1"
+"010 00"_s: "frequente_2"
+
+# PERSONAGGI
+"010 10 00"_s: "personaggi"
+
+# NOMI
+"010 10 01"_s: "nomi_italiani_radice"
+"010 10 10"_s: "nomi_irregolari"
+
+# AGGETTIVI
+"011 00 0"_s: "aggettivi_comuni_radice"
+"011 00 1"_s: "aggettivi_irregolari"
+
+# LUOGHI
+"010 10 11"_s: "nazioni_continenti"
+"010 11 00"_s: "regioni_province"
+"010 11 01"_s: "citta_italiane"
+"010 11 10"_s: "citta_estere"
+"010 11 11"_s: "luoghi_rari_32bit"
+
+# SIGLE E TECNICI
+"011 01 0"_s: "sigle_comuni"
+"011 01 1"_s: "termini_tecnici"
+
+# VERBI
+"011 10 0"_s: "verbi_comuni_radice"
+"011 10 1"_s: "verbi_rari_radice"
+"011 11 0"_s: "verbi_coniugati_comuni"
+"011 11 1"_s: "verbi_coniugati_rari"
+
+# RELAZIONI
+"100 00 0"_s: "spaziali"
+"100 00 1"_s: "temporali"
+"100 01 0"_s: "direzioni"
+"100 01 1"_s: "quantita"
+
+# PRONOMI
+"100 10"_s: "pronomi_personali"
+
+# RISERVATO
+"010 01"_s: "riservato_1"
+"100 11"_s: "riservato_2"
+
+# SPECIALI
+"00 00"_s: "numeri"
+"00 01"_s: "punteggiatura"
+"00 10"_s: "parole_sconosciute"
+"00 11"_s: "calendario"
+
+[coding_table.flags]
+coniugabile_b: true
+desinenza_2bit_b: true
+persona_4bit_b: true
+genere_numero_2bit_b: true

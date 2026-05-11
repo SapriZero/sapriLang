@@ -1,0 +1,22 @@
+# ============================================
+# DB_VOCABULARY.SSON
+# Vocabolario per il crate sapri_db
+# ============================================
+
+[diz.vocabulary.db.types] allowed_l
+    s, i, f, b, d, r, e
+
+[diz.vocabulary.db.constraints] allowed_l
+    min, max, max, pattern, enum, ref
+
+[diz.vocabulary.db.index_types] allowed_l
+    hash, sorted
+
+[diz.vocabulary.db.operations] allowed_l
+    select, insert, update, delete, join, flat, group
+
+[diz.paths.db.schema] type_s, source_s
+    struct, "core/sson/spec/db_schema.sson"
+
+[diz.paths.db.config] type_s, source_s
+    struct, "core/db/config/db_config.sson"

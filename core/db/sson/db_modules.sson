@@ -1,0 +1,251 @@
+# ============================================
+# DB_MODULES.SSON
+# Specifica dei moduli Rust per sapri_db
+# ============================================
+
+# ============================================
+# MODULO: header
+# Gestione header a bit variabili
+# ============================================
+[mod.header] desc
+    "Parsing e generazione header a lunghezza variabile"
+
+[mod.header.structs]
+    [mod.header.structs.Header]
+        fields: bits_s, pattern_s
+        methods: from_str, to_str, bits, pattern
+
+[mod.header.enums]
+    [mod.header.enums.HeaderError]
+        variants: InvalidPattern, BitsTooLong, EmptyPattern
+
+[mod.header.functions]
+    [mod.header.functions.parse]
+        params: input_s
+        returns: Result<Header, HeaderError>
+    [mod.header.functions.generate]
+        params: bits_n, pattern_s
+        returns: Header
+
+# ============================================
+# MODULO: schema
+# Parsing dello schema .sson
+# ============================================
+[mod.schema] desc
+    "Parsing delle definizioni di tabella e campi"
+
+[mod.schema.structs]
+    [mod.schema.structs.TableDef]
+        fields: name_s, header_s, index_bits_n, desc_s?
+    [mod.schema.structs.FieldDef]
+        fields: name_s, table_s, tipo_s, constraints_s?, optional_b
+    [mod.schema.structs.IndexDef]
+        fields: name_s, table_s, fields_s, tipo_s
+
+[mod.schema.enums]
+    [mod.schema.enums.FieldType]
+        variants: String, Int, Float, Bool, Date, Ref, Enum
+    [mod.schema.enums.Constraint]
+        variants: Min(n_f), Max(n_f), Pattern(s), Ref(s), Enum(s), MaxLength(n)
+
+[mod.schema.functions]
+    [mod.schema.functions.load_schema]
+        params: path_s
+        returns: Result<Vec<TableDef>, SchemaError>
+    [mod.schema.functions.validate_table_def]
+        params: def:TableDef
+        returns: Result<(), SchemaError>
+
+# ============================================
+# MODULO: table
+# Struttura tabella con accesso O(1)
+# ============================================
+[mod.table] desc
+    "Tabella con header + array di record"
+
+[mod.table.structs]
+    [mod.table.structs.Table]
+        fields: header_s, index_bits_n, records_v, indexes_m
+    [mod.table.structs.Record]
+        fields: id_n, values_m
+
+[mod.table.functions]
+    [mod.table.functions.new]
+        params: header_s, index_bits_n
+        returns: Table
+    [mod.table.functions.get]
+        params: &self, index_n
+        returns: Option<&Record>
+    [mod.table.functions.insert]
+        params: &mut self, record:Record
+        returns: usize
+    [mod.table.functions.update]
+        params: &mut self, index_n, record:Record
+        returns: Result<(), TableError>
+    [mod.table.functions.delete]
+        params: &mut self, index_n
+        returns: Result<(), TableError>
+    [mod.table.functions.len]
+        params: &self
+        returns: usize
+
+# ============================================
+# MODULO: validator
+# Validazione AJV-style
+# ============================================
+[mod.validator] desc
+    "Validazione record contro schema"
+
+[mod.validator.structs]
+    [mod.validator.structs.Validator]
+        fields: schema_v
+
+[mod.validator.functions]
+    [mod.validator.functions.new]
+        params: schema:&TableDef
+        returns: Validator
+    [mod.validator.functions.validate]
+        params: &self, record:&Record
+        returns: Result<(), Vec<ValidationError>>
+    [mod.validator.functions.validate_field]
+        params: &self, field_name_s, value:&Value, field_def:&FieldDef
+        returns: Result<(), ValidationError>
+
+# ============================================
+# MODULO: loader
+# Caricamento dati da CSV .sson
+# ============================================
+[mod.loader] desc
+    "Caricamento dati da file .sson in formato CSV"
+
+[mod.loader.structs]
+    [mod.loader.structs.Loader]
+        fields: config_m
+
+[mod.loader.functions]
+    [mod.loader.functions.load_table]
+        params: path_s, schema:&TableDef
+        returns: Result<Table, LoaderError>
+    [mod.loader.functions.parse_csv_line]
+        params: line_s, separatore_c
+        returns: Vec<String>
+    [mod.loader.functions.parse_value]
+        params: value_s, field_def:&FieldDef
+        returns: Result<Value, LoaderError>
+
+# ============================================
+# MODULO: binary
+# Serializzazione binaria
+# ============================================
+[mod.binary] desc
+    "Scrittura/lettura binaria (numeri non in testo)"
+
+[mod.binary.structs]
+    [mod.binary.structs.BinaryWriter]
+        fields: buffer_v, offset_n
+    [mod.binary.structs.BinaryReader]
+        fields: buffer_v, offset_n
+
+[mod.binary.functions]
+    [mod.binary.functions.write_table]
+        params: writer:&mut BinaryWriter, table:&Table
+        returns: Result<(), BinaryError>
+    [mod.binary.functions.read_table]
+        params: reader:&mut BinaryReader, schema:&TableDef
+        returns: Result<Table, BinaryError>
+    [mod.binary.functions.write_value]
+        params: writer:&mut BinaryWriter, value:&Value, field_def:&FieldDef
+        returns: Result<(), BinaryError>
+    [mod.binary.functions.read_value]
+        params: reader:&mut BinaryReader, field_def:&FieldDef
+        returns: Result<Value, BinaryError>
+
+# ============================================
+# MODULO: database
+# Collezione di tabelle
+# ============================================
+[mod.database] desc
+    "Database come collezione di tabelle con lookup O(1)"
+
+[mod.database.structs]
+    [mod.database.structs.Database]
+        fields: tables_m, schemas_m, config_m
+
+[mod.database.functions]
+    [mod.database.functions.new]
+        params: config_path_s?
+        returns: Database
+    [mod.database.functions.load_schema]
+        params: &mut self, path_s
+        returns: Result<(), DbError>
+    [mod.database.functions.load_data]
+        params: &mut self, path_s
+        returns: Result<(), DbError>
+    [mod.database.functions.get_table]
+        params: &self, header_s
+        returns: Option<&Table>
+    [mod.database.functions.get_table_mut]
+        params: &mut self, header_s
+        returns: Option<&mut Table>
+    [mod.database.functions.join]
+        params: &self, table1_s, table2_s, key1_s, key2_s
+        returns: Result<Vec<Record>, DbError>
+    [mod.database.functions.flat]
+        params: &self, table_s, key_s
+        returns: Result<Table, DbError>
+    [mod.database.functions.group_by]
+        params: &self, table_s, field_s
+        returns: Result<HashMap<String, usize>, DbError>
+    [mod.database.functions.save_binary]
+        params: &self, path_s
+        returns: Result<(), DbError>
+    [mod.database.functions.load_binary]
+        params: &mut self, path_s
+        returns: Result<(), DbError>
+
+# ============================================
+# MODULO: join
+# Operazioni di join tra tabelle
+# ============================================
+[mod.join] desc
+    "Join tra tabelle (hash join ottimizzato)"
+
+[mod.join.functions]
+    [mod.join.functions.hash_join]
+        params: left:&Table, right:&Table, left_key_s, right_key_s
+        returns: Vec<Record>
+    [mod.join.functions.nested_loop_join]
+        params: left:&Table, right:&Table, left_key_s, right_key_s
+        returns: Vec<Record>
+    [mod.join.functions.merge_join]
+        params: left:&Table, right:&Table, left_key_s, right_key_s
+        returns: Vec<Record>
+
+# ============================================
+# MODULO: flat
+# Appiattimento tabelle (rimozione ripetizioni)
+# ============================================
+[mod.flat] desc
+    "Appiattimento tabelle normalizzate"
+
+[mod.flat.functions]
+    [mod.flat.functions.flat_table]
+        params: table:&Table, key_fields_l
+        returns: Result<(Table, Table), FlatError>
+    [mod.flat.functions.deduplicate]
+        params: values_v
+        returns: (Vec<Value>, Vec<usize>)
+    [mod.flat.functions.rebuild]
+        params: main:&Table, lookup:&Table, key_field_s, ref_field_s
+        returns: Result<Table, FlatError>
+
+# ============================================
+# MODULO: error
+# Errori unificati
+# ============================================
+[mod.error] desc
+    "Errori comuni per tutto il crate"
+
+[mod.error.enums]
+    [mod.error.enums.DbError]
+        variants: SchemaError(s), LoaderError(s), ValidatorError(s), BinaryError(s), TableError(s), NotFound(s), InvalidHeader(s)

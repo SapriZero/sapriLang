@@ -1,0 +1,40 @@
+# ============================================
+# DB_SCHEMA.SSON
+# Definizione del formato per le tabelle del database
+# ============================================
+
+# ============================================
+# TABELLA
+# ============================================
+# [t.nome] header, index_bits, descrizione?
+[t] header_s, index_bits_n, descrizione_s?
+
+# ============================================
+# CAMPO
+# ============================================
+# [c.nome_tabella.nome_campo] tipo, vincoli...
+[c] tipo_s, vincoli_s?
+
+# Tipi ammessi (da dizionario):
+#   s (string), i (int), f (float), b (bool), d (date), r (ref), e (enum)
+
+# Vincoli per tipo:
+#   s: max=n, pattern="regex", enum="a|b|c"
+#   i: min=n, max=n, enum="1|2|3"
+#   f: min=n, max=n
+#   b: -
+#   d: min="YYYY-MM-DD", max="YYYY-MM-DD"
+#   r: ref="tabella.campo"
+#   e: values="a|b|c"
+
+# Campo opzionale: aggiungere ? dopo i vincoli
+# Esempio: [c.clienti.note] s,max=200?
+
+# ============================================
+# INDICE SECONDARIO
+# ============================================
+# [i.nome_tabella.nome_indice] campi_s, tipo_s
+#   campi: "campo1|campo2" (pipe separatore)
+#   tipo: "hash" (default) o "sorted"
+
+[i] campi_s, tipo_s?

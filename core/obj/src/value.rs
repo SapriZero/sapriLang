@@ -16,6 +16,8 @@ pub enum Value {
     String(String),
     /// Oggetto annidato
     Obj(Obj),
+    /// Array di valori
+    Array(Vec<Value>),
 }
 
 impl Value {
@@ -59,6 +61,22 @@ impl Value {
         }
     }
 
+    /// Converte in Option<&Vec<Value>>
+    pub fn as_array(&self) -> Option<&Vec<Value>> {
+        match self {
+            Value::Array(arr) => Some(arr),
+            _ => None,
+        }
+    }
+
+    /// Converte in Option<Vec<Value>> (con consumo)
+    pub fn into_array(self) -> Option<Vec<Value>> {
+        match self {
+            Value::Array(arr) => Some(arr),
+            _ => None,
+        }
+    }
+
     /// Verifica se è Null
     pub fn is_null(&self) -> bool {
         matches!(self, Value::Null)
@@ -67,6 +85,11 @@ impl Value {
     /// Verifica se è un oggetto
     pub fn is_obj(&self) -> bool {
         matches!(self, Value::Obj(_))
+    }
+
+    /// Verifica se è un array
+    pub fn is_array(&self) -> bool {
+        matches!(self, Value::Array(_))
     }
 }
 
@@ -113,6 +136,12 @@ impl From<Obj> for Value {
     }
 }
 
+impl From<Vec<Value>> for Value {
+    fn from(arr: Vec<Value>) -> Self {
+        Value::Array(arr)
+    }
+}
+
 impl fmt::Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -121,6 +150,16 @@ impl fmt::Display for Value {
             Value::Number(n) => write!(f, "{}", n),
             Value::String(s) => write!(f, "\"{}\"", s),
             Value::Obj(obj) => write!(f, "{:?}", obj),
+            Value::Array(arr) => {
+                write!(f, "[")?;
+                for (i, v) in arr.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", v)?;
+                }
+                write!(f, "]")
+            }
         }
     }
 }

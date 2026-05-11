@@ -1,0 +1,17 @@
+[module]
+name_s: "urcm_desinenze"
+version_s: "1.0"
+
+[desinenze]
+"00"_s: "desinenza_o_maschio_sing"
+"01"_s: "desinenza_a_femmina_sing"
+"10"_s: "desinenza_i_maschio_plur"
+"11"_s: "desinenza_e_femmina_plur"
+
+[persone]
+"0000"_s: "prima_sing_io"
+"0001"_s: "seconda_sing_tu"
+"0010"_s: "terza_sing_lui"
+"0011"_s: "prima_plur_noi"
+"0100"_s: "seconda_plur_voi"
+"0101"_s: "terza_plur_loro"

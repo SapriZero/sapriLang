@@ -1,0 +1,20 @@
+[diz.vocabulary.structs]
+allowed_l: "UrcmCoding", "UrcmDecoder", "UrcmEncoder", "HotReloadManager"
+
+[diz.vocabulary.fields]
+allowed_l: "coding_table", "desinenze", "morfologia", "radice", "flag_coniugabile"
+
+[diz.vocabulary.verbs]
+allowed_l: "encode", "decode", "load_table", "hot_reload"
+
+[diz.paths.urcm.coding_table]
+type_s: "struct"
+source_s: "sson/spec/coding_table.sson"
+
+[diz.paths.urcm.desinenze]
+type_s: "struct"
+source_s: "sson/spec/desinenze.sson"
+
+[diz.paths.urcm.morfologia]
+type_s: "struct"
+source_s: "sson/spec/morfologia.sson"
