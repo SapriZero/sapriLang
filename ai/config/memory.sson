@@ -1,0 +1,13 @@
+# Configurazione memoria olografica
+
+[memory]
+max_entries_n: 100
+decay_rate_f: 0.05
+
+[memory.storage]
+path_s: "../data/memory.sson"
+auto_save_b: true
+save_interval_s: "300s"
+
+[memory.index]
+type_e: _:enum[hash, btree, array], _:default=hash

@@ -1,0 +1,52 @@
+# Base di conoscenza dell'AI
+# Definizioni atomiche di parole e concetti
+
+[urcm]
+predicato: è
+oggetto: "Universal Relational Character Mapping"
+peso: 255
+
+[zero]
+predicato: è
+oggetto: "tensione tra opposti, 1-1=0"
+peso: 250
+
+[sestina]
+predicato: è
+oggetto: "sei generatori: π, φ, √2, α, μ, h"
+peso: 250
+
+[phi]
+predicato: è
+oggetto: "sezione aurea = 1.618, φ² = φ + 1"
+peso: 220
+
+[pi]
+predicato: è
+oggetto: "π = 3.14159, rapporto cerchio/diametro"
+peso: 220
+
+[quark]
+predicato: è
+oggetto: "particella elementare, 3 nel protone"
+peso: 200
+
+[musica]
+predicato: è
+oggetto: "arte dei suoni, segue le 6 Sestine"
+peso: 180
+
+[fisica]
+predicato: è
+oggetto: "scienza della materia e dell'energia"
+peso: 170
+
+[quantistica]
+predicato: è
+oggetto: "meccanica dei sistemi microscopici"
+peso: 160
+
+[relatività]
+predicato: è
+oggetto: "teoria di Einstein su spazio e tempo"
+peso: 160

@@ -1,0 +1,10 @@
+[package]
+name = "sapri_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_core = { path = "..core/core" }
+sapri_db = { path = "../core/db" }
+sapri_morph = { path = "../core/morph" }
+sapri_diz = { path = "../core/diz" }

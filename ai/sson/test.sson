@@ -1,0 +1,6 @@
+[struct.Test]
+derive: "Debug"
+
+[struct.Test.fields]
+name: "String"
+age: "i32"

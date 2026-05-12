@@ -1,0 +1,58 @@
+[struct.KnowledgeBase]
+derive: "Debug, Clone, Default"
+
+[struct.KnowledgeBase.fields]
+terzine: "HashMap<String, Terzina>"
+
+[struct.Terzina]
+derive: "Debug, Clone"
+
+[struct.Terzina.fields]
+soggetto: "String"
+predicato: "String"
+oggetto: "String"
+peso: "u8"
+
+[impl.KnowledgeBase]
+functions: "new", "add", "add_terzina", "answer", "get", "save", "load", "len", "is_empty", "stats"
+
+[impl.KnowledgeBase.new]
+params: ""
+return_type: "Self"
+is_static: "true"
+
+[impl.KnowledgeBase.add]
+params: "&mut self, terzina: Terzina"
+return_type: "()"
+
+[impl.KnowledgeBase.add_terzina]
+params: "&mut self, soggetto: &str, oggetto: &str"
+return_type: "()"
+
+[impl.KnowledgeBase.answer]
+params: "&self, question: &str"
+return_type: "String"
+
+[impl.KnowledgeBase.get]
+params: "&self, soggetto: &str"
+return_type: "Vec<&Terzina>"
+
+[impl.KnowledgeBase.save]
+params: "&self, path: &str"
+return_type: "Result<(), String>"
+
+[impl.KnowledgeBase.load]
+params: "&mut self, path: &str"
+return_type: "Result<(), String>"
+
+[impl.KnowledgeBase.len]
+params: "&self"
+return_type: "usize"
+
+[impl.KnowledgeBase.is_empty]
+params: "&self"
+return_type: "bool"
+
+[impl.KnowledgeBase.stats]
+params: "&self"
+return_type: "String"

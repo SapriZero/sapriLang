@@ -16,7 +16,7 @@ all.txt
 
 # Data directories
 /scripts/
-/ai/
+/ai/data
 /chats/
 /data/
 /tmp/

@@ -1,0 +1,123 @@
+# ============================================
+# DICTIONARY COMPRESSOR - CONFIGURAZIONE
+# Versione: 1.0
+# ============================================
+# QUESTO FILE CONTIENE I VALORI REALI
+# MODIFICABILE PER DIVERSE LINGUE/PARAMETRI
+# ============================================
+
+[config]
+name_s: "Italian Dictionary"
+language_s: "it"
+version_s: "1.0.0"
+
+# ============================================
+# PARAMETRI
+# ============================================
+
+[params]
+block_size_n: 65536
+char_bits_n: 6
+primary_index_size_n: 4096
+escape_code_n: 63
+
+# ============================================
+# MAPPA CARATTERI (valori reali)
+# ============================================
+
+[char_mapping]
+[.lowercase]
+start_char_s: "a"
+end_char_s: "z"
+start_code_n: 0
+end_code_n: 25
+
+[.uppercase]
+start_char_s: "A"
+end_char_s: "Z"
+start_code_n: 26
+end_code_n: 51
+
+[.space]
+char_s: " "
+code_n: 52
+
+[.accents]
+chars_values_l: "à", "è", "é", "ì", "ò", "ù"
+codes_l: 53, 54, 55, 56, 57, 58
+
+[.punctuation]
+chars_values_l: ".", ",", "-", "_"
+codes_l: 59, 60, 61, 62
+
+[.escape]
+char_s: "ESCAPE"
+code_n: 63
+
+# ============================================
+# SUFFISSI COMUNI (valori reali)
+# ============================================
+
+[suffixes]
+list_l: "a", "e", "i", "o", "are", "ere", "ire", "mente", "zione", "sione", "tà", "ità", "bilità", "ismo", "ista", "istico", "issimo", "errimo", "atore", "izione", "ale", "ile"
+
+# ============================================
+# STOPWORDS (valori reali)
+# ============================================
+
+[stopwords]
+list_l: "a", "à", "al", "allo", "alla", "ai", "agli", "alle", "con", "coi", "col", "come", "da", "dal", "dalla", "dai", "dagli", "dalle", "di", "del", "dello", "della", "dei", "degli", "delle", "e", "ed", "è", "era", "ero", "erano", "il", "lo", "la", "i", "gli", "le", "l'", "in", "nel", "nello", "nella", "nei", "negli", "nelle", "non", "per", "se", "si", "sì", "su", "sul", "sullo", "sulla", "sui", "sugli", "sulle", "un", "uno", "una", "un'"
+
+# ============================================
+# FILE INPUT/OUTPUT (valori reali)
+# ============================================
+
+[paths]
+[.input]
+wikipedia_dump_s: "data/itwiki-latest-pages-articles.xml.bz2"
+raw_words_s: "data/wikipedia_words.txt"
+clean_words_s: "data/wikipedia_words_clean.txt"
+
+[.output]
+dictionary_bin_s: "data/dictionary.bin"
+stats_json_s: "data/dictionary_stats.json"
+blocks_bin_s: "data/blocks.bin"
+index_bin_s: "data/index.bin"
+
+# ============================================
+# STRUMENTI (valori reali)
+# ============================================
+
+[tools]
+[.extract]
+script_s: "scripts/extract_words_from_wikipedia.py"
+
+[.clean]
+script_s: "scripts/clean_wikipedia_words.py"
+
+[.build_blocks]
+binary_s: "target/release/build_blocks"
+
+[.build_index]
+binary_s: "target/release/build_index"
+
+[.assemble]
+binary_s: "target/release/assemble_dictionary"
+
+# ============================================
+# PARAMETRI DI COMPRESSIONE (valori reali)
+# ============================================
+
+[compression]
+enable_suffixes_b: true
+min_suffix_length_n: 2
+max_suffix_length_n: 8
+min_suffix_frequency_n: 100
+
+# ============================================
+# PARAMETRI DI RICERCA (valori reali)
+# ============================================
+
+[search]
+max_overflow_chain_n: 10
+fallback_blocks_n: 2

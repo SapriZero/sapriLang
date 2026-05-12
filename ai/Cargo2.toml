@@ -1,0 +1,42 @@
+[package]
+name = "sapri_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_base = { path = "../core/base" }
+sapri_obj = { path = "../core/obj" }
+sapri_rust_dsl = { path = "../core/rust_dsl" }
+sapri_sson = { path = "../core/sson" }
+sapri_core = { path = "../core/core" }
+
+# Utilità
+regex = "1.10"
+once_cell = "1.19"
+
+[features]
+default = []
+
+
+[package]
+name = "sapri_ai"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sapri_core = { path = "../core" }
+sapri_db = { path = "../db" }
+sapri_morph = { path = "../morph" }
+sapri_diz = { path = "../diz" }
+
+[[example]]
+name = "learn"
+path = "examples/learn.rs"
+
+[[example]]
+name = "chat"
+path = "examples/chat.rs"
+
+[[example]]
+name = "analyze"
+path = "examples/analyze.rs"

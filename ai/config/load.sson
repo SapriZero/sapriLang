@@ -1,0 +1,28 @@
+# Punto di ingresso per il caricamento della configurazione
+# Questo file viene letto all'avvio
+
+[load]
+[.system]
+file_s: "config.sson"
+required_b: true
+
+[.knowledge]
+file_s: "knowledge.sson"
+required_b: false
+description_s: "Base di conoscenza (opzionale)"
+
+[.validators]
+file_s: "validators.sson"
+required_b: false
+description_s: "Validatori input/output"
+
+[.templates]
+file_s: "response_templates.sson"
+required_b: false
+description_s: "Template di risposta"
+
+[.data]
+[.words]
+file_s: "../data/wikipedia_words_clean.txt"
+format_e: _:enum[words, dic, csv]
+required_b: false

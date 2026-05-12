@@ -1,0 +1,5 @@
+[load]
+input_dir_s: "sson"
+output_dir_s: "src"
+skip_if_exists_pattern: "_impl\\.rs$"
+verbose_b: true

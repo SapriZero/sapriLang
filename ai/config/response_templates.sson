@@ -1,0 +1,26 @@
+# Template per le risposte dell'AI
+
+[templates]
+[.greeting]
+pattern_s: "ciao|salve|buongiorno"
+response_s: "Ciao! Sono SapriAI. Come posso aiutarti?"
+
+[.thanks]
+pattern_s: "grazie|grazia|merci"
+response_s: "Prego! La conoscenza si moltiplica quando condivisa."
+
+[.unknown]
+pattern_s: ".*"
+response_s: "Non ho capito. Puoi riformulare?"
+
+[.what_is]
+pattern_s: "cos'è|cosa è|che cos'è"
+response_s: "_{soggetto} è _{definizione}"
+
+[.who_is]
+pattern_s: "chi è"
+response_s: "_{soggetto} è _{definizione}"
+
+[.how_to]
+pattern_s: "come si"
+response_s: "Per _{azione}, _{istruzione}"

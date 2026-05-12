@@ -1,0 +1,32 @@
+# Validatori per input utente
+# Definisce come validare le domande dell'utente
+
+[validators.input]
+[.not_empty]
+name: "req"
+target: "input"
+message_s: "Inserisci una domanda"
+
+[.max_length]
+name: "max"
+target: "input"
+params: { value: 1000 }
+message_s: "Domanda troppo lunga (max 1000 caratteri)"
+
+[.no_profanity]
+name: "pattern"
+target: "input"
+params: { regex: "^[^<>{}()]*$" }
+message_s: "Caratteri non consentiti"
+
+[validators.response]
+[.not_empty]
+name: "req"
+target: "response"
+message_s: "Risposta vuota"
+
+[.max_length]
+name: "max"
+target: "response"
+params: { value: 5000 }
+message_s: "Risposta troppo lunga"

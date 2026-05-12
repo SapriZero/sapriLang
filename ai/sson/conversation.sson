@@ -1,0 +1,62 @@
+[struct.Conversation]
+derive: "Debug, Clone, Default"
+
+[struct.Conversation.fields]
+messages: "Vec<Message>"
+max_history: "usize"
+
+[struct.Message]
+derive: "Debug, Clone"
+
+[struct.Message.fields]
+role: "String"
+content: "String"
+
+[impl.Conversation]
+functions: "new", "with_max_history", "add_user_message", "add_assistant_message", "add_pair", "history", "last_user_message", "last_assistant_message", "clear", "len", "is_empty"
+
+[impl.Conversation.new]
+params: ""
+return_type: "Self"
+is_static: "true"
+
+[impl.Conversation.with_max_history]
+params: "max_history: usize"
+return_type: "Self"
+is_static: "true"
+
+[impl.Conversation.add_user_message]
+params: "&mut self, content: &str"
+return_type: "()"
+
+[impl.Conversation.add_assistant_message]
+params: "&mut self, content: &str"
+return_type: "()"
+
+[impl.Conversation.add_pair]
+params: "&mut self, user: &str, assistant: &str"
+return_type: "()"
+
+[impl.Conversation.history]
+params: "&self"
+return_type: "&[Message]"
+
+[impl.Conversation.last_user_message]
+params: "&self"
+return_type: "Option<&Message>"
+
+[impl.Conversation.last_assistant_message]
+params: "&self"
+return_type: "Option<&Message>"
+
+[impl.Conversation.clear]
+params: "&mut self"
+return_type: "()"
+
+[impl.Conversation.len]
+params: "&self"
+return_type: "usize"
+
+[impl.Conversation.is_empty]
+params: "&self"
+return_type: "bool"

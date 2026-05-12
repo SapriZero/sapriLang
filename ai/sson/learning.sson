@@ -1,0 +1,25 @@
+[struct.Learner]
+derive: "Debug, Clone, Default"
+
+[struct.Learner.fields]
+stats: "HashMap<String, usize>"
+
+[impl.Learner]
+functions: "new", "learn", "confidence", "most_common_response"
+
+[impl.Learner.new]
+params: ""
+return_type: "Self"
+is_static: "true"
+
+[impl.Learner.learn]
+params: "&mut self, input: &str, response: &str"
+return_type: "()"
+
+[impl.Learner.confidence]
+params: "&self, input: &str, response: &str"
+return_type: "f64"
+
+[impl.Learner.most_common_response]
+params: "&self, input: &str"
+return_type: "Option<String>"

@@ -1,5 +1,9 @@
 .
 ├── ai
+│   ├── bin
+│   │   └── reader
+│   │       └── src
+│   │           └── main.rs
 │   ├── config
 │   │   ├── config.sson
 │   │   ├── knowledge.sson
@@ -100,7 +104,8 @@
 │   │   ├── learning.rs
 │   │   ├── lib.rs
 │   │   ├── main.rs
-│   │   └── memory.rs
+│   │   ├── memory.rs
+│   │   └── reader.rs
 │   ├── sson
 │   │   ├── brain.sson
 │   │   ├── conversation.sson
@@ -112,6 +117,7 @@
 │   │   ├── wikipedia_spec.sson
 │   │   └── wikipedia.sson
 │   ├── ai_speack.md
+│   ├── Cargo2.toml
 │   ├── Cargo.toml
 │   ├── loader.sson
 │   ├── pippo
@@ -205,7 +211,8 @@
 │   │   │   └── db_schema.sson
 │   │   ├── Cargo.toml
 │   │   ├── diz.sson
-│   │   └── HOW_DO.md
+│   │   ├── HOW_DO.md
+│   │   └── README.md
 │   ├── diz
 │   │   ├── lang
 │   │   │   └── it
@@ -524,4 +531,4 @@
 ├── unpack.sh
 └── urcm_rust_bundle.txt
 
-104 directories, 421 files
+107 directories, 425 files

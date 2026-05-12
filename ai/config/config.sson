@@ -1,0 +1,28 @@
+# Configurazione principale dell'AI
+# Percorso: ai/config/config.sson
+
+[system]
+name_s: "SapriAI"
+version_s: "0.1.0"
+mode_e: _:enum[strict, generative], _:default=generative
+max_depth_n: _:min=1, _:max=1000, _:default=100
+
+[system.paths]
+data_dir_s: "ai/data"
+config_dir_s: "ai/config"
+knowledge_file_s: "ai/data/knowledge.sson"
+memory_file_s: "ai/data/memory.sson"
+
+[system.knowledge]
+# Dizionario parole da Wikipedia
+wikipedia_words_s: "ai/data/wikipedia_words_clean.txt"
+# Dizionario Hunspell (opzionale)
+hunspell_dic_s: "ai/data/italiano_2_4_2007_09_01/it_IT.dic"
+hunspell_aff_s: "ai/data/italiano_2_4_2007_09_01/it_IT.aff"
+
+[system.memory]
+max_entries_n: _:min=10, _:max=10000, _:default=100
+decay_rate_f: _:min=0, _:max=1, _:default=0.05
+
+[system.conversation]
+max_history_n: _:min=10, _:max=1000, _:default=100
