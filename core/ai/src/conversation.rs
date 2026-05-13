@@ -2,6 +2,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// Ruolo del messaggio
 #[derive(Debug, Clone, PartialEq)]
 pub enum Role {
     User,
@@ -9,6 +10,7 @@ pub enum Role {
     System,
 }
 
+/// Singolo messaggio
 #[derive(Debug, Clone)]
 pub struct Message {
     pub role: Role,
@@ -22,10 +24,15 @@ impl Message {
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
             .as_secs();
-        Self { role, content, timestamp }
+        Self {
+            role,
+            content,
+            timestamp,
+        }
     }
 }
 
+/// Cronologia della conversazione
 #[derive(Debug, Clone, Default)]
 pub struct Conversation {
     messages: Vec<Message>,
@@ -34,11 +41,17 @@ pub struct Conversation {
 
 impl Conversation {
     pub fn new() -> Self {
-        Self { messages: Vec::new(), max_history: 100 }
+        Self {
+            messages: Vec::new(),
+            max_history: 100,
+        }
     }
 
     pub fn with_max_history(max: usize) -> Self {
-        Self { messages: Vec::new(), max_history: max }
+        Self {
+            messages: Vec::new(),
+            max_history: max,
+        }
     }
 
     pub fn add_user_message(&mut self, content: &str) {
@@ -78,16 +91,5 @@ impl Conversation {
 
     pub fn len(&self) -> usize {
         self.messages.len()
-    }
-
-    pub fn stats(&self) -> String {
-        let user_msgs = self.messages.iter().filter(|m| m.role == Role::User).count();
-        let assistant_msgs = self.messages.iter().filter(|m| m.role == Role::Assistant).count();
-        format!(
-            "💬 Conversation: {} messages ({} user, {} assistant)",
-            self.messages.len(),
-            user_msgs,
-            assistant_msgs
-        )
     }
 }

@@ -1,0 +1,11 @@
+# Addestramento
+cargo run -p sapri_ai --bin ai_learn
+
+# Chat
+cargo run -p sapri_ai --bin ai_chat
+
+# Analisi
+cargo run -p sapri_ai --bin ai_analyze
+
+# Test inferenza
+cargo run -p sapri_ai --bin ai_infer

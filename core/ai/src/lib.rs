@@ -6,9 +6,10 @@
 //! - IRCM per proiezione multidimensionale
 //! - MSAS per rilevamento struttura
 
+// Moduli esistenti (da tenere)
+pub mod conversation;
 
 // Nuovi moduli
-pub mod conversation;
 pub mod knowledge;
 pub mod memory;
 pub mod brain;
@@ -16,11 +17,9 @@ pub mod reader;
 pub mod analyzer;
 pub mod reasoner;
 pub mod utils;
-pub mod wiki_loader;  
 
 // Re-export principali
 pub use brain::Brain;
 pub use knowledge::KnowledgeBase;
 pub use memory::HolographicMemory;
 pub use conversation::Conversation;
-pub use reasoner::Reasoner;

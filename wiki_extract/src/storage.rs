@@ -213,6 +213,34 @@ pub fn load_checkpoint(output_dir: &str) -> Result<Option<serde_json::Value>, St
     Ok(Some(checkpoint))
 }
 
+// Fallback: leggere il file .sson direttamente
+pub fn load_articles_from_sson(knowledge: &mut KnowledgeBase, path: &str) -> Result<usize, String> {
+    use std::fs::File;
+    use std::io::{BufRead, BufReader};
+    
+    let file = File::open(path).map_err(|e| e.to_string())?;
+    let reader = BufReader::new(file);
+    let mut count = 0;
+    
+    for line in reader.lines() {
+        let line = line.map_err(|e| e.to_string())?;
+        if line.is_empty() { continue; }
+        
+        // Formato: id|title|start|end|categories
+        let parts: Vec<&str> = line.split('|').collect();
+        if parts.len() >= 5 {
+            let id = parts[0];
+            let title = parts[1];
+            let categories = parts[4];
+            
+            knowledge.add_article(id, title, categories)?;
+            count += 1;
+        }
+    }
+    
+    Ok(count)
+}
+
 // ============================================
 // FUNZIONI LEGACY (per compatibilità)
 // ============================================

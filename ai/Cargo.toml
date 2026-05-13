@@ -4,7 +4,30 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sapri_core = { path = "..core/core" }
+sapri_base = { path = "../core/base" }
+sapri_core = { path = "../core/core" }
 sapri_db = { path = "../core/db" }
 sapri_morph = { path = "../core/morph" }
 sapri_diz = { path = "../core/diz" }
+sapri_obj = { path = "../core/obj" }
+sapri_sson = { path = "../core/sson" }
+wiki_extract = { path = "../wiki_extract" }  # ← aggiungi
+
+once_cell = "1.19"
+crossbeam-channel = "0.5"
+
+[[bin]]
+name = "ai_learn"
+path = "bin/learn.rs"
+
+[[bin]]
+name = "ai_chat"
+path = "bin/chat.rs"
+
+[[bin]]
+name = "ai_analyze"
+path = "bin/analyze.rs"
+
+[[bin]]
+name = "ai_infer"
+path = "bin/infer.rs"

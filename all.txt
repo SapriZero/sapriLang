@@ -1,490 +1,1064 @@
---$CHANGE===: core/obj/src/obj.rs
-//! Struttura Obj dinamica con supporto path
+--$FILE===: core/ai/src/knowledge.rs
+//! Base di conoscenza strutturata
+//!
+//! Utilizza sapri_db per memorizzare e ricercare conoscenza in O(1)
+
+use sapri_db::{Database, DatabaseOps, Table, Record, Validator, Validate};
+use sapri_obj::Value;
+use std::collections::HashMap;
+
+/// Base di conoscenza strutturata
+#[derive(Debug)]
+pub struct KnowledgeBase {
+    db: Database,
+}
+
+/// Informazioni su una parola/concept
+#[derive(Debug, Clone)]
+pub struct ConceptInfo {
+    pub name: String,
+    pub category: String,
+    pub frequency: usize,
+    pub relations: HashMap<String, Vec<String>>,
+}
+
+impl KnowledgeBase {
+    pub fn new() -> Self {
+        Self {
+            db: Database::new(),
+        }
+    }
+
+    pub fn with_config(config: &sapri_obj::Obj) -> Self {
+        Self {
+            db: Database::with_config(config.clone()),
+        }
+    }
+
+    /// Aggiunge una relazione tra due concetti
+    pub fn add_relation(&mut self, subject: &str, predicate: &str, object: &str) -> Result<(), String> {
+        let mut table = self.get_or_create_table("relations")?;
+        
+        let mut record = Record::new(0);
+        record.set("subject", Value::from(subject));
+        record.set("predicate", Value::from(predicate));
+        record.set("object", Value::from(object));
+        
+        table.insert(record);
+        Ok(())
+    }
+
+    /// Cerca concetti per relazione
+    pub fn find_by_relation(&self, subject: &str, predicate: &str) -> Vec<String> {
+        let mut results = Vec::new();
+        
+        if let Some(table) = self.db.get_table("relations") {
+            for record in table.records() {
+                let record_subject = record.get("subject").and_then(|v| v.as_str()).unwrap_or("");
+                let record_predicate = record.get("predicate").and_then(|v| v.as_str()).unwrap_or("");
+                
+                if record_subject == subject && record_predicate == predicate {
+                    if let Some(obj) = record.get("object").and_then(|v| v.as_str()) {
+                        results.push(obj.to_string());
+                    }
+                }
+            }
+        }
+        
+        results
+    }
+
+    /// Verifica se esiste una relazione
+    pub fn has_relation(&self, subject: &str, predicate: &str, object: &str) -> bool {
+        self.find_by_relation(subject, predicate).contains(&object.to_string())
+    }
+
+    /// Aggiunge una parola al vocabolario
+    pub fn add_word(&mut self, word: &str, category: &str) -> Result<(), String> {
+        let mut table = self.get_or_create_table("vocabulary")?;
+        
+        let mut record = Record::new(0);
+        record.set("word", Value::from(word));
+        record.set("category", Value::from(category));
+        
+        table.insert(record);
+        Ok(())
+    }
+
+    /// Ottiene la categoria di una parola
+    pub fn get_category(&self, word: &str) -> Option<String> {
+        if let Some(table) = self.db.get_table("vocabulary") {
+            for record in table.records() {
+                let record_word = record.get("word").and_then(|v| v.as_str()).unwrap_or("");
+                if record_word == word {
+                    return record.get("category").and_then(|v| v.as_str()).map(|s| s.to_string());
+                }
+            }
+        }
+        None
+    }
+
+    /// Importa conoscenza da Wikipedia (formato articoli)
+    pub fn import_wikipedia_articles(&mut self, path: &str) -> Result<usize, String> {
+        use std::fs::File;
+        use std::io::{BufRead, BufReader};
+        
+        let file = File::open(path).map_err(|e| e.to_string())?;
+        let reader = BufReader::new(file);
+        let mut count = 0;
+        
+        for line in reader.lines() {
+            let line = line.map_err(|e| e.to_string())?;
+            if line.is_empty() { continue; }
+            
+            let parts: Vec<&str> = line.split('|').collect();
+            if parts.len() >= 5 {
+                let id = parts[0];
+                let title = parts[1];
+                let categories = parts[4];
+                
+                self.add_article(id, title, categories)?;
+                count += 1;
+            }
+            
+            if count % 10000 == 0 {
+                println!("📚 Importati {} articoli...", count);
+            }
+        }
+        
+        Ok(count)
+    }
+
+    fn add_article(&mut self, id: &str, title: &str, categories: &str) -> Result<(), String> {
+        let mut table = self.get_or_create_table("articles")?;
+        
+        let mut record = Record::new(0);
+        record.set("id", Value::from(id));
+        record.set("title", Value::from(title));
+        record.set("categories", Value::from(categories));
+        
+        table.insert(record);
+        
+        // Aggiungi anche come parola nel vocabolario
+        self.add_word(title, "article")?;
+        
+        Ok(())
+    }
+
+    fn get_or_create_table(&mut self, name: &str) -> Result<&mut Table, String> {
+        if self.db.get_table(name).is_none() {
+            // Header temporaneo (poi migliorabile)
+            self.db.add_table(name, Table::new("10", 16))?;
+        }
+        Ok(self.db.get_table_mut(name).unwrap())
+    }
+
+    pub fn stats(&self) -> String {
+        let articles = self.db.get_table("articles").map(|t| t.len()).unwrap_or(0);
+        let vocabulary = self.db.get_table("vocabulary").map(|t| t.len()).unwrap_or(0);
+        let relations = self.db.get_table("relations").map(|t| t.len()).unwrap_or(0);
+        
+        format!(
+            "📊 Knowledge Base:\n  - Articoli: {}\n  - Vocabolario: {}\n  - Relazioni: {}",
+            articles, vocabulary, relations
+        )
+    }
+
+    pub fn save(&self, path: &str) -> Result<(), String> {
+        self.db.save_binary(path)
+    }
+
+    pub fn load(&mut self, path: &str) -> Result<(), String> {
+        self.db.load_binary(path)
+    }
+}
+
+impl Default for KnowledgeBase {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+--$FILE===: core/ai/src/memory.rs
+//! Memoria olografica basata su IRCM
+//!
+//! Implementa i principi della memoria olografica:
+//! - Salva solo gli scarti (S ≠ 1)
+//! - Ricostruisce il dato implicito dalla struttura
+
+use sapri_db::{Database, DatabaseOps, Table, Record};
+use sapri_obj::Value;
+
+/// Memoria olografica
+#[derive(Debug)]
+pub struct HolographicMemory {
+    db: Database,
+    /// Fattore K (tolleranza per considerare S ≈ 1)
+    tolerance: f64,
+}
+
+/// Entry di memoria con S-score
+#[derive(Debug, Clone)]
+pub struct MemoryEntry {
+    pub input: String,
+    pub output: String,
+    pub s_score: f64,
+    pub timestamp: u64,
+}
+
+impl HolographicMemory {
+    pub fn new() -> Self {
+        Self {
+            db: Database::new(),
+            tolerance: 0.1, // S ≈ 1 se |S-1| < 0.1
+        }
+    }
+
+    pub fn with_tolerance(tolerance: f64) -> Self {
+        Self {
+            db: Database::new(),
+            tolerance,
+        }
+    }
+
+    /// Ricorda una nuova informazione (calcola S-score)
+    pub fn remember(&mut self, input: &str, output: &str) -> Result<f64, String> {
+        // Calcola S-score (versione semplificata)
+        // S = (v * i) / (t * k) dove:
+        // v = importanza (1 per default)
+        // i = novità (1 per default)
+        // t = target (1 per default)
+        // k = tolerance
+        let s_score = self.compute_s_score(input, output);
+        
+        // Salva solo se S ≠ 1 (scarto significativo)
+        if (s_score - 1.0).abs() > self.tolerance {
+            let mut table = self.get_or_create_table("memory")?;
+            let mut record = Record::new(0);
+            record.set("input", Value::from(input));
+            record.set("output", Value::from(output));
+            record.set("s_score", Value::from(s_score));
+            table.insert(record);
+        }
+        
+        Ok(s_score)
+    }
+
+    /// Recupera un ricordo per input
+    pub fn recall(&self, input: &str) -> Option<String> {
+        // Cerca prima nella memoria diretta
+        if let Some(table) = self.db.get_table("memory") {
+            for record in table.records() {
+                let record_input = record.get("input").and_then(|v| v.as_str()).unwrap_or("");
+                if record_input == input {
+                    return record.get("output").and_then(|v| v.as_str()).map(|s| s.to_string());
+                }
+            }
+        }
+        
+        // TODO: Se non trova, cerca per similarità strutturale (IRCM)
+        None
+    }
+
+    /// Calcola S-score per una coppia input-output
+    fn compute_s_score(&self, input: &str, output: &str) -> f64 {
+        // Formula semplificata: S = (len(input) * novelty) / (target * tolerance)
+        let v = input.len() as f64 / 100.0; // normalizzato
+        let i = 1.0; // novità (da implementare)
+        let t = 1.0; // target
+        let k = self.tolerance;
+        
+        if t * k == 0.0 { 1.0 } else { (v * i) / (t * k) }
+    }
+
+    /// Ricostruisce un dato mancante dalla struttura relazionale
+    pub fn reconstruct(&self, input: &str) -> Option<String> {
+        // TODO: Implementare ricostruzione olografica
+        // Dati i vicini (relazioni), deduci il dato mancante
+        self.recall(input)
+    }
+
+    fn get_or_create_table(&mut self, name: &str) -> Result<&mut Table, String> {
+        if self.db.get_table(name).is_none() {
+            self.db.add_table(name, Table::new("11", 16))?;
+        }
+        Ok(self.db.get_table_mut(name).unwrap())
+    }
+
+    pub fn len(&self) -> usize {
+        self.db.get_table("memory").map(|t| t.len()).unwrap_or(0)
+    }
+
+    pub fn save(&self, path: &str) -> Result<(), String> {
+        self.db.save_binary(path)
+    }
+
+    pub fn load(&mut self, path: &str) -> Result<(), String> {
+        self.db.load_binary(path)
+    }
+}
+
+impl Default for HolographicMemory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+--$FILE===: core/ai/src/utils.rs
+//! Utility varie per l'AI
+
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Ottiene timestamp corrente in secondi
+pub fn current_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
+}
+
+/// Normalizza un testo (lowercase, rimuove punteggiatura, etc.)
+pub fn normalize_text(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .filter(|c| c.is_alphabetic() || c.is_whitespace())
+        .collect()
+}
+
+/// Estrae parole da un testo
+pub fn extract_words(text: &str) -> Vec<String> {
+    normalize_text(text)
+        .split_whitespace()
+        .filter(|w| w.len() > 2)
+        .map(|w| w.to_string())
+        .collect()
+}
+
+/// Calcola similarità tra due stringhe (versione semplice)
+pub fn string_similarity(a: &str, b: &str) -> f64 {
+    let a_norm = normalize_text(a);
+    let b_norm = normalize_text(b);
+    
+    if a_norm.is_empty() && b_norm.is_empty() {
+        return 1.0;
+    }
+    
+    let common = a_norm
+        .split_whitespace()
+        .filter(|w| b_norm.split_whitespace().any(|bw| bw == w))
+        .count();
+    
+    let total = a_norm.split_whitespace().count().max(b_norm.split_whitespace().count());
+    
+    if total == 0 { 0.0 } else { common as f64 / total as f64 }
+}
+
+--$FILE===: core/ai/src/reader.rs
+//! Lettore autonomo di Wikipedia
+//! Costruisce conoscenza senza regole predefinite
+
+use crate::knowledge::KnowledgeBase;
+use std::collections::HashMap;
+
+/// Lettore di Wikipedia
+#[derive(Debug)]
+pub struct WikipediaReader {
+    knowledge: KnowledgeBase,
+    stats: Statistics,
+}
+
+/// Statistiche di lettura
+#[derive(Debug, Default)]
+pub struct Statistics {
+    pub total_articles: usize,
+    pub total_categories: usize,
+    pub word_frequency: HashMap<String, usize>,
+    pub cooccurences: HashMap<(String, String), usize>,
+}
+
+impl WikipediaReader {
+    pub fn new() -> Self {
+        Self {
+            knowledge: KnowledgeBase::new(),
+            stats: Statistics::default(),
+        }
+    }
+
+    pub fn with_knowledge(knowledge: KnowledgeBase) -> Self {
+        Self {
+            knowledge,
+            stats: Statistics::default(),
+        }
+    }
+
+    /// Legge il file articoli riga per riga
+    pub fn read_articles(&mut self, path: &str) -> Result<usize, String> {
+        use std::fs::File;
+        use std::io::{BufRead, BufReader};
+        
+        let file = File::open(path).map_err(|e| e.to_string())?;
+        let reader = BufReader::new(file);
+        let mut count = 0;
+        
+        for (line_num, line) in reader.lines().enumerate() {
+            let line = line.map_err(|e| e.to_string())?;
+            if line.is_empty() { continue; }
+            
+            self.process_article(&line)?;
+            count += 1;
+            
+            if count % 10000 == 0 {
+                println!("📚 Processati {} articoli...", count);
+            }
+        }
+        
+        self.stats.total_articles = count;
+        println!("✅ Letti {} articoli totali", count);
+        Ok(count)
+    }
+
+    fn process_article(&mut self, line: &str) -> Result<(), String> {
+        let parts: Vec<&str> = line.split('|').collect();
+        if parts.len() < 5 {
+            return Ok(());
+        }
+
+        let id = parts[0];
+        let title = parts[1];
+        let categories_str = parts[4];
+
+        // Aggiungi articolo alla knowledge base
+        self.knowledge.add_article(id, title, categories_str)?;
+        
+        // Estrai parole per statistiche
+        let title_words = crate::utils::extract_words(title);
+        let categories: Vec<String> = categories_str
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect();
+        
+        let category_words: Vec<String> = categories
+            .iter()
+            .flat_map(|cat| crate::utils::extract_words(cat))
+            .collect();
+
+        // Aggiorna statistiche
+        for word in &title_words {
+            *self.stats.word_frequency.entry(word.clone()).or_insert(0) += 1;
+        }
+        for word in &category_words {
+            *self.stats.word_frequency.entry(word.clone()).or_insert(0) += 1;
+        }
+
+        // Registra co-occorrenze
+        for title_word in &title_words {
+            for cat_word in &category_words {
+                if title_word != cat_word {
+                    let key = (title_word.clone(), cat_word.clone());
+                    *self.stats.cooccurences.entry(key).or_insert(0) += 1;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn get_knowledge(&self) -> &KnowledgeBase {
+        &self.knowledge
+    }
+
+    pub fn into_knowledge(self) -> KnowledgeBase {
+        self.knowledge
+    }
+
+    pub fn stats(&self) -> &Statistics {
+        &self.stats
+    }
+
+    pub fn print_stats(&self) {
+        println!("\n📊 STATISTICHE LETTURA");
+        println!("Articoli processati: {}", self.stats.total_articles);
+        println!("Parole distinte: {}", self.stats.word_frequency.len());
+        println!("Co-occorrenze distinte: {}", self.stats.cooccurences.len());
+        
+        // Mostra parole più frequenti
+        let mut sorted: Vec<_> = self.stats.word_frequency.iter().collect();
+        sorted.sort_by(|a, b| b.1.cmp(a.1));
+        
+        println!("\n🏆 Top 10 parole più frequenti:");
+        for (word, count) in sorted.iter().take(10) {
+            println!("  {}: {}", word, count);
+        }
+    }
+}
+
+impl Default for WikipediaReader {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+--$FILE===: core/ai/src/analyzer.rs
+//! Analizzatore MSAS e IRCM
+//!
+//! MSAS (Multi-Scale Autocorrelation Signature) - rilevamento struttura
+//! IRCM (Iterative Relational Calculus with Memory) - proiezione multidimensionale
 
 use std::collections::HashMap;
-use crate::value::Value;
 
-type Key = String;
-
-/// Oggetto dinamico stile JavaScript
-#[derive(Debug, Clone, Default)]
-pub struct Obj {
-    data: HashMap<Key, Value>,
+/// Analizzatore di struttura (MSAS-like)
+#[derive(Debug)]
+pub struct MsasAnalyzer {
+    epsilon: f64,
 }
 
-impl Obj {
-    /// Crea un nuovo oggetto vuoto
+/// Proiettore IRCM
+#[derive(Debug)]
+pub struct IrcmProjector {
+    dimensions: usize,
+}
+
+/// Risultato dell'analisi MSAS
+#[derive(Debug, Clone)]
+pub struct MsasResult {
+    pub index: f64,
+    pub has_structure: bool,
+    pub structure_strength: f64,
+}
+
+/// Proiezione IRCM in spazio multidimensionale
+#[derive(Debug, Clone)]
+pub struct IrcmProjection {
+    pub point: Vec<f64>,
+    pub s_score: f64,
+    pub is_equilibrium: bool,
+}
+
+impl MsasAnalyzer {
     pub fn new() -> Self {
-        Self::default()
+        Self { epsilon: 0.001 }
     }
 
-    /// Imposta un valore nel campo (semplice)
-    pub fn set(mut self, key: &str, value: impl Into<Value>) -> Self {
-        self.data.insert(key.to_string(), value.into());
-        self
+    pub fn with_epsilon(epsilon: f64) -> Self {
+        Self { epsilon }
     }
 
-    /// Imposta un valore per path (crea oggetti intermedi se necessario)
-    pub fn set_path(mut self, path: &[&str], value: impl Into<Value>) -> Self {
-        if path.is_empty() {
-            return self;
+    /// Calcola indice MSAS su una sequenza di valori
+    pub fn compute(&self, sequence: &[f64]) -> MsasResult {
+        if sequence.is_empty() {
+            return MsasResult {
+                index: 0.0,
+                has_structure: false,
+                structure_strength: 0.0,
+            };
         }
 
-        let value = value.into();
-
-        if path.len() == 1 {
-            self.data.insert(path[0].to_string(), value);
-            return self;
-        }
-
-        // Path con più livelli
-        let key = path[0].to_string();
-        let remaining = &path[1..];
-
-        let child = self.data
-            .remove(&key)
-            .and_then(|v| {
-                if let Value::Obj(obj) = v {
-                    Some(obj)
-                } else {
-                    None
-                }
-            })
-            .unwrap_or_else(Obj::new);
-
-        let new_child = child.set_path(remaining, value);
-        self.data.insert(key, Value::Obj(new_child));
-        self
-    }
-
-    /// Ottiene un valore per chiave semplice
-    pub fn get(&self, key: &str) -> Option<&Value> {
-        self.data.get(key)
-    }
-
-    /// Ottiene un valore per path array
-    pub fn get_path(&self, path: &[&str]) -> Option<&Value> {
-        if path.is_empty() {
-            return None;
-        }
-
-        let first = path[0];
-        let value = self.data.get(first)?;
-
-        if path.len() == 1 {
-            return Some(value);
-        }
-
-        match value {
-            Value::Obj(obj) => obj.get_path(&path[1..]),
-            _ => None,
+        let mean = sequence.iter().sum::<f64>() / sequence.len() as f64;
+        let variance = sequence.iter()
+            .map(|x| (x - mean).powi(2))
+            .sum::<f64>() / sequence.len() as f64;
+        
+        let msas = variance.sqrt();
+        
+        MsasResult {
+            index: msas,
+            has_structure: msas > self.epsilon,
+            structure_strength: msas,
         }
     }
 
-    /// Ottiene un valore per dot notation (es. "a.b.c")
-    pub fn get_dot(&self, dot_path: &str) -> Option<&Value> {
-        let path: Vec<&str> = dot_path.split('.').collect();
-        self.get_path(&path)
-    }
-
-    /// Imposta un valore per dot notation
-    pub fn set_dot(mut self, dot_path: &str, value: impl Into<Value>) -> Self {
-        let path: Vec<&str> = dot_path.split('.').collect();
-        self.set_path(&path, value)
-    }
-
-    /// Rimuove un campo
-    pub fn remove(mut self, key: &str) -> Self {
-        self.data.remove(key);
-        self
-    }
-
-    /// Rimuove per path
-    pub fn remove_path(mut self, path: &[&str]) -> Self {
-        if path.is_empty() {
-            return self;
-        }
-
-        if path.len() == 1 {
-            self.data.remove(path[0]);
-            return self;
-        }
-
-        let key = path[0];
-        let remaining = &path[1..];
-
-        if let Some(Value::Obj(obj)) = self.data.get(key).cloned() {
-            let new_obj = obj.remove_path(remaining);
-            self.data.insert(key.to_string(), Value::Obj(new_obj));
-        }
-        self
-    }
-
-    /// Verifica se contiene una chiave
-    pub fn contains(&self, key: &str) -> bool {
-        self.data.contains_key(key)
-    }
-
-    /// Unisce due oggetti (spread operator)
-    pub fn merge(mut self, other: Obj) -> Self {
-        for (k, v) in other.data {
-            self.data.insert(k, v);
-        }
-        self
-    }
-
-    /// Unisce per path (merge profondo)
-    pub fn merge_deep(mut self, other: Obj) -> Self {
-        for (k, v) in other.data {
-            match (self.data.remove(&k), v) {
-                (Some(Value::Obj(existing)), Value::Obj(new)) => {
-                    let merged = existing.merge_deep(new);
-                    self.data.insert(k, Value::Obj(merged));
-                }
-                (_, v) => {
-                    self.data.insert(k, v);
-                }
-            }
-        }
-        self
-    }
-
-    /// Restituisce il numero di campi
-    pub fn len(&self) -> usize {
-        self.data.len()
-    }
-
-    /// Verifica se è vuoto
-    pub fn is_empty(&self) -> bool {
-        self.data.is_empty()
-    }
-
-    /// Restituisce tutte le chiavi
-    pub fn keys(&self) -> Vec<&str> {
-        self.data.keys().map(|s| s.as_str()).collect()
-    }
-
-    /// Restituisce tutti i valori
-    pub fn values(&self) -> Vec<&Value> {
-        self.data.values().collect()
+    /// Calcola correlazione tra due sequenze
+    pub fn correlate(&self, a: &[f64], b: &[f64]) -> f64 {
+        let min_len = a.len().min(b.len());
+        if min_len == 0 { return 0.0; }
+        
+        let a_mean = a[..min_len].iter().sum::<f64>() / min_len as f64;
+        let b_mean = b[..min_len].iter().sum::<f64>() / min_len as f64;
+        
+        let numerator: f64 = (0..min_len)
+            .map(|i| (a[i] - a_mean) * (b[i] - b_mean))
+            .sum();
+        
+        let a_denom: f64 = (0..min_len).map(|i| (a[i] - a_mean).powi(2)).sum();
+        let b_denom: f64 = (0..min_len).map(|i| (b[i] - b_mean).powi(2)).sum();
+        
+        if a_denom == 0.0 || b_denom == 0.0 { 0.0 } 
+        else { numerator / (a_denom * b_denom).sqrt() }
     }
 }
 
-impl From<HashMap<String, Value>> for Obj {
-    fn from(data: HashMap<String, Value>) -> Self {
-        Self { data }
+impl IrcmProjector {
+    pub fn new() -> Self {
+        Self { dimensions: 6 }  // Spazio 6D (Sestina)
+    }
+
+    pub fn with_dimensions(dimensions: usize) -> Self {
+        Self { dimensions }
+    }
+
+    /// Proietta un punto nello spazio IRCM
+    pub fn project(&self, values: &[f64]) -> IrcmProjection {
+        let mut point = vec![0.0; self.dimensions];
+        for i in 0..self.dimensions.min(values.len()) {
+            point[i] = values[i];
+        }
+        
+        let s_score = self.compute_s_score(&point);
+        
+        IrcmProjection {
+            point,
+            s_score,
+            is_equilibrium: (s_score - 1.0).abs() < 0.01,
+        }
+    }
+
+    /// Calcola S-score (equilibrio) per un punto
+    fn compute_s_score(&self, point: &[f64]) -> f64 {
+        // S = (v * i) / (t * k)
+        let v = point.get(0).copied().unwrap_or(1.0);  // valore
+        let i = point.get(1).copied().unwrap_or(1.0);  // intensità
+        let t = point.get(2).copied().unwrap_or(1.0);  // target
+        let k = point.get(3).copied().unwrap_or(1.0);  // tolleranza
+        
+        if t * k == 0.0 { 1.0 } else { (v * i) / (t * k) }
+    }
+
+    /// Trova l'equilibrio in uno spazio di punti
+    pub fn find_equilibrium(&self, points: &[IrcmProjection]) -> Option<usize> {
+        points.iter()
+            .enumerate()
+            .filter(|(_, p)| p.is_equilibrium)
+            .map(|(i, p)| (i, (p.s_score - 1.0).abs()))
+            .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+            .map(|(i, _)| i)
     }
 }
 
-impl From<Obj> for HashMap<String, Value> {
-    fn from(obj: Obj) -> Self {
-        obj.data
-    }
-}
-
---$CHANGE===: core/obj/src/value.rs
-//! Valori che possono essere contenuti in un oggetto
-
-use std::fmt;
-use crate::obj::Obj;
-
-/// Valori supportati da Obj
-#[derive(Debug, Clone, PartialEq)]
-pub enum Value {
-    /// Valore nullo
-    Null,
-    /// Booleano
-    Bool(bool),
-    /// Numero (f64)
-    Number(f64),
-    /// Stringa
-    String(String),
-    /// Oggetto annidato
-    Obj(Obj),
-}
-
-impl Value {
-    /// Converte in Option<f64>
-    pub fn as_number(&self) -> Option<f64> {
-        match self {
-            Value::Number(n) => Some(*n),
-            _ => None,
-        }
-    }
-
-    /// Converte in Option<bool>
-    pub fn as_bool(&self) -> Option<bool> {
-        match self {
-            Value::Bool(b) => Some(*b),
-            _ => None,
-        }
-    }
-
-    /// Converte in Option<&str>
-    pub fn as_str(&self) -> Option<&str> {
-        match self {
-            Value::String(s) => Some(s),
-            _ => None,
-        }
-    }
-
-    /// Converte in Option<&Obj>
-    pub fn as_obj(&self) -> Option<&Obj> {
-        match self {
-            Value::Obj(obj) => Some(obj),
-            _ => None,
-        }
-    }
-
-    /// Converte in Option<Obj> (con consumo)
-    pub fn into_obj(self) -> Option<Obj> {
-        match self {
-            Value::Obj(obj) => Some(obj),
-            _ => None,
-        }
-    }
-
-    /// Verifica se è Null
-    pub fn is_null(&self) -> bool {
-        matches!(self, Value::Null)
-    }
-
-    /// Verifica se è un oggetto
-    pub fn is_obj(&self) -> bool {
-        matches!(self, Value::Obj(_))
-    }
-}
-
-impl Default for Value {
+impl Default for MsasAnalyzer {
     fn default() -> Self {
-        Value::Null
+        Self::new()
     }
 }
 
-// Conversioni
-impl From<i32> for Value {
-    fn from(n: i32) -> Self {
-        Value::Number(n as f64)
+impl Default for IrcmProjector {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
-impl From<f64> for Value {
-    fn from(n: f64) -> Self {
-        Value::Number(n)
+--$FILE===: core/ai/src/reasoner.rs
+//! Motore di inferenza basato su IRCM
+
+use crate::knowledge::KnowledgeBase;
+use crate::analyzer::{MsasAnalyzer, IrcmProjector, MsasResult, IrcmProjection};
+
+/// Motore di inferenza
+#[derive(Debug)]
+pub struct Reasoner {
+    knowledge: KnowledgeBase,
+    msas: MsasAnalyzer,
+    ircm: IrcmProjector,
+}
+
+/// Risultato di inferenza
+#[derive(Debug, Clone)]
+pub struct Inference {
+    pub query: String,
+    pub answer: String,
+    pub confidence: f64,
+    pub s_score: f64,
+}
+
+impl Reasoner {
+    pub fn new(knowledge: KnowledgeBase) -> Self {
+        Self {
+            knowledge,
+            msas: MsasAnalyzer::new(),
+            ircm: IrcmProjector::new(),
+        }
+    }
+
+    /// Risponde a una query usando la conoscenza e l'inferenza
+    pub fn query(&self, query: &str) -> Inference {
+        // 1. Analizza la query (trova parole chiave)
+        let words = crate::utils::extract_words(query);
+        
+        if words.is_empty() {
+            return Inference {
+                query: query.to_string(),
+                answer: "Non ho capito la domanda".to_string(),
+                confidence: 0.0,
+                s_score: 0.0,
+            };
+        }
+        
+        // 2. Cerca nella conoscenza
+        let mut answers = Vec::new();
+        
+        for word in &words {
+            if let Some(category) = self.knowledge.get_category(word) {
+                answers.push(format!("{} è un {}", word, category));
+            }
+            
+            // Cerca relazioni
+            let relations = self.knowledge.find_by_relation(word, "is_a");
+            for rel in relations {
+                answers.push(format!("{} è un {}", word, rel));
+            }
+        }
+        
+        // 3. Se non trova, usa inferenza IRCM
+        if answers.is_empty() {
+            Inference {
+                query: query.to_string(),
+                answer: format!("Non conosco '{}'", words.join(", ")),
+                confidence: 0.0,
+                s_score: 0.0,
+            }
+        } else {
+            Inference {
+                query: query.to_string(),
+                answer: answers.join("; "),
+                confidence: 0.8,
+                s_score: 0.95,
+            }
+        }
+    }
+
+    /// Inferisce per analogia (IRCM projection)
+    pub fn infer_analogy(&self, source: &str, target: &str) -> Option<String> {
+        // TODO: Implementare analogia usando proiezione IRCM
+        // Esempio: se A sta a B come C sta a ?
+        None
+    }
+
+    /// Calcola similarità strutturale tra due concetti (IRCM)
+    pub fn structural_similarity(&self, concept_a: &str, concept_b: &str) -> f64 {
+        let relations_a = self.knowledge.find_by_relation(concept_a, "is_a");
+        let relations_b = self.knowledge.find_by_relation(concept_b, "is_a");
+        
+        if relations_a.is_empty() || relations_b.is_empty() {
+            return 0.0;
+        }
+        
+        let common: usize = relations_a.iter()
+            .filter(|r| relations_b.contains(r))
+            .count();
+        
+        common as f64 / relations_a.len().max(relations_b.len()) as f64
+    }
+
+    pub fn knowledge(&self) -> &KnowledgeBase {
+        &self.knowledge
     }
 }
 
-impl From<bool> for Value {
-    fn from(b: bool) -> Self {
-        Value::Bool(b)
+--$FILE===: core/ai/src/brain.rs
+//! Cervello principale dell'AI - Motore unificato
+
+use crate::conversation::Conversation;
+use crate::knowledge::KnowledgeBase;
+use crate::memory::HolographicMemory;
+use crate::reasoner::Reasoner;
+use crate::reader::WikipediaReader;
+use sapri_core::Config;
+
+/// Cervello principale dell'AI
+#[derive(Debug)]
+pub struct Brain {
+    config: Config,
+    conversation: Conversation,
+    knowledge: KnowledgeBase,
+    memory: HolographicMemory,
+    reasoner: Reasoner,
+}
+
+impl Brain {
+    pub fn new() -> Result<Self, String> {
+        Self::with_config(Config::default())
+    }
+
+    pub fn with_config(config: Config) -> Result<Self, String> {
+        let knowledge = KnowledgeBase::with_config(config.as_obj());
+        let reasoner = Reasoner::new(knowledge.clone());
+        
+        Ok(Self {
+            config,
+            conversation: Conversation::new(),
+            knowledge,
+            memory: HolographicMemory::new(),
+            reasoner,
+        })
+    }
+
+    /// Carica conoscenza da Wikipedia
+    pub fn learn_from_wikipedia(&mut self, path: &str) -> Result<usize, String> {
+        println!("🧠 Apprendimento da Wikipedia...");
+        let mut reader = WikipediaReader::with_knowledge(self.knowledge.clone());
+        let count = reader.read_articles(path)?;
+        self.knowledge = reader.into_knowledge();
+        self.reasoner = Reasoner::new(self.knowledge.clone());
+        Ok(count)
+    }
+
+    /// Importa dizionario
+    pub fn import_dictionary(&mut self, path: &str) -> Result<usize, String> {
+        use std::fs::File;
+        use std::io::{BufRead, BufReader};
+        
+        let file = File::open(path).map_err(|e| e.to_string())?;
+        let reader = BufReader::new(file);
+        let mut count = 0;
+        
+        for line in reader.lines() {
+            let line = line.map_err(|e| e.to_string())?;
+            if let Some((word, _)) = line.split_once('/') {
+                self.knowledge.add_word(word, "word")?;
+                count += 1;
+            }
+        }
+        
+        Ok(count)
+    }
+
+    /// Parla: risponde a un input
+    pub fn talk(&mut self, input: &str) -> String {
+        self.conversation.add_user_message(input);
+        
+        // 1. Cerca in memoria (ricordo diretto)
+        if let Some(response) = self.memory.recall(input) {
+            self.conversation.add_assistant_message(&response);
+            return response;
+        }
+        
+        // 2. Usa il reasoner (inferenza + conoscenza)
+        let inference = self.reasoner.query(input);
+        
+        let response = if inference.confidence > 0.5 {
+            inference.answer
+        } else {
+            format!("Non conosco '{}'. Puoi insegnarmelo?", input)
+        };
+        
+        // 3. Memorizza la nuova conoscenza (calcola S-score)
+        let _ = self.memory.remember(input, &response);
+        
+        self.conversation.add_assistant_message(&response);
+        response
+    }
+
+    /// Insegna una nuova conoscenza
+    pub fn teach(&mut self, input: &str, output: &str) -> Result<(), String> {
+        self.memory.remember(input, output)?;
+        
+        // Se sembra una definizione (es. "gatto è un animale")
+        if input.contains(" è un ") {
+            let parts: Vec<&str> = input.split(" è un ").collect();
+            if parts.len() == 2 {
+                self.knowledge.add_relation(parts[0].trim(), "is_a", parts[1].trim())?;
+            }
+        }
+        
+        Ok(())
+    }
+
+    pub fn save(&self, path: &str) -> Result<(), String> {
+        self.knowledge.save(&format!("{}/knowledge.bin", path))?;
+        self.memory.save(&format!("{}/memory.bin", path))?;
+        Ok(())
+    }
+
+    pub fn load(&mut self, path: &str) -> Result<(), String> {
+        self.knowledge.load(&format!("{}/knowledge.bin", path))?;
+        self.memory.load(&format!("{}/memory.bin", path))?;
+        self.reasoner = Reasoner::new(self.knowledge.clone());
+        Ok(())
+    }
+
+    pub fn stats(&self) -> String {
+        format!(
+            "{}\n{}\n{}",
+            self.knowledge.stats(),
+            self.memory.stats(),
+            self.conversation.stats()
+        )
     }
 }
 
-impl From<String> for Value {
-    fn from(s: String) -> Self {
-        Value::String(s)
+impl Default for Brain {
+    fn default() -> Self {
+        Self::new().unwrap()
     }
 }
 
-impl From<&str> for Value {
-    fn from(s: &str) -> Self {
-        Value::String(s.to_string())
-    }
+--$FILE===: core/ai/src/utils.rs
+//! Utility varie per l'AI
+
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Ottiene timestamp corrente in secondi
+pub fn current_timestamp() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
 }
 
-impl From<Obj> for Value {
-    fn from(obj: Obj) -> Self {
-        Value::Obj(obj)
-    }
+/// Normalizza un testo (lowercase, rimuove punteggiatura, etc.)
+pub fn normalize_text(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .filter(|c| c.is_alphabetic() || c.is_whitespace())
+        .collect()
 }
 
-impl fmt::Display for Value {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Value::Null => write!(f, "null"),
-            Value::Bool(b) => write!(f, "{}", b),
-            Value::Number(n) => write!(f, "{}", n),
-            Value::String(s) => write!(f, "\"{}\"", s),
-            Value::Obj(obj) => write!(f, "{:?}", obj),
+/// Estrae parole da un testo
+pub fn extract_words(text: &str) -> Vec<String> {
+    normalize_text(text)
+        .split_whitespace()
+        .filter(|w| w.len() > 2)
+        .map(|w| w.to_string())
+        .collect()
+}
+
+/// Calcola similarità tra due stringhe (versione semplice)
+pub fn string_similarity(a: &str, b: &str) -> f64 {
+    let a_norm = normalize_text(a);
+    let b_norm = normalize_text(b);
+    
+    if a_norm.is_empty() && b_norm.is_empty() {
+        return 1.0;
+    }
+    
+    let common = a_norm
+        .split_whitespace()
+        .filter(|w| b_norm.split_whitespace().any(|bw| bw == w))
+        .count();
+    
+    let total = a_norm.split_whitespace().count().max(b_norm.split_whitespace().count());
+    
+    if total == 0 { 0.0 } else { common as f64 / total as f64 }
+}
+
+--$FILE===: core/ai/src/conversation.rs
+//! Gestione della cronologia delle conversazioni
+
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Ruolo del messaggio
+#[derive(Debug, Clone, PartialEq)]
+pub enum Role {
+    User,
+    Assistant,
+    System,
+}
+
+/// Singolo messaggio
+#[derive(Debug, Clone)]
+pub struct Message {
+    pub role: Role,
+    pub content: String,
+    pub timestamp: u64,
+}
+
+impl Message {
+    pub fn new(role: Role, content: String) -> Self {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        Self {
+            role,
+            content,
+            timestamp,
         }
     }
 }
 
---$CHANGE===: core/obj/src/macros.rs
-//! Macro per creare oggetti con sintassi stile JavaScript
-
-/// Crea un oggetto Obj con sintassi stile JavaScript
-///
-/// # Esempi
-///
-/// ```
-/// use sapri_obj::obj;
-///
-/// // Oggetto semplice
-/// let person = obj! {
-///     name: "Alice",
-///     age: 30,
-///     active: true
-/// };
-///
-/// // Oggetto annidato
-/// let nested = obj! {
-///     a: 10,
-///     b: obj! {
-///         c: 20,
-///         d: 30
-///     }
-/// };
-///
-/// // Con ereditarietà (spread)
-/// let base = obj! { a: 10, b: 20 };
-/// let extended = obj! {
-///     using base,
-///     b: 30,
-///     c: 40
-/// };
-/// ```
-#[macro_export]
-macro_rules! obj {
-    // Oggetto vuoto
-    () => {
-        $crate::Obj::new()
-    };
-
-    // Con ereditarietà (spread)
-    (using $parent:expr, $($key:ident : $value:expr),* $(,)?) => {{
-        let mut _obj = $parent.clone();
-        $(
-            _obj = _obj.set(stringify!($key), $value);
-        )*
-        _obj
-    }};
-
-    // Campi semplici
-    ($($key:ident : $value:expr),* $(,)?) => {{
-        let mut _obj = $crate::Obj::new();
-        $(
-            _obj = _obj.set(stringify!($key), $value);
-        )*
-        _obj
-    }};
+/// Cronologia della conversazione
+#[derive(Debug, Clone, Default)]
+pub struct Conversation {
+    messages: Vec<Message>,
+    max_history: usize,
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::Obj;
-
-    #[test]
-    fn test_obj_empty() {
-        let obj = obj! {};
-        assert!(obj.is_empty());
+impl Conversation {
+    pub fn new() -> Self {
+        Self {
+            messages: Vec::new(),
+            max_history: 100,
+        }
     }
 
-    #[test]
-    fn test_obj_simple() {
-        let obj = obj! {
-            a: 10,
-            b: 20.5,
-            c: "hello",
-            d: true
-        };
-
-        assert_eq!(obj.get("a").unwrap().as_number(), Some(10.0));
-        assert_eq!(obj.get("b").unwrap().as_number(), Some(20.5));
-        assert_eq!(obj.get("c").unwrap().as_str(), Some("hello"));
-        assert_eq!(obj.get("d").unwrap().as_bool(), Some(true));
+    pub fn with_max_history(max: usize) -> Self {
+        Self {
+            messages: Vec::new(),
+            max_history: max,
+        }
     }
 
-    #[test]
-    fn test_obj_nested() {
-        let obj = obj! {
-            a: 10,
-            b: obj! {
-                c: 20,
-                d: obj! {
-                    e: 30
-                }
-            }
-        };
-
-        assert_eq!(obj.get("a").unwrap().as_number(), Some(10.0));
-        
-        let b = obj.get("b").unwrap().as_obj().unwrap();
-        assert_eq!(b.get("c").unwrap().as_number(), Some(20.0));
-        
-        let d = b.get("d").unwrap().as_obj().unwrap();
-        assert_eq!(d.get("e").unwrap().as_number(), Some(30.0));
+    pub fn add_user_message(&mut self, content: &str) {
+        self.add_message(Role::User, content);
     }
 
-    #[test]
-    fn test_obj_path_access() {
-        let obj = obj! {
-            a: 10,
-            b: obj! {
-                c: 20,
-                d: obj! {
-                    e: 30
-                }
-            }
-        };
-
-        assert_eq!(obj.get_path(&["b", "c"]).unwrap().as_number(), Some(20.0));
-        assert_eq!(obj.get_path(&["b", "d", "e"]).unwrap().as_number(), Some(30.0));
-        assert_eq!(obj.get_dot("b.c").unwrap().as_number(), Some(20.0));
-        assert_eq!(obj.get_dot("b.d.e").unwrap().as_number(), Some(30.0));
+    pub fn add_assistant_message(&mut self, content: &str) {
+        self.add_message(Role::Assistant, content);
     }
 
-    #[test]
-    fn test_obj_set_path() {
-        let obj = Obj::new()
-            .set_path(&["a", "b", "c"], 42);
-
-        assert_eq!(obj.get_dot("a.b.c").unwrap().as_number(), Some(42.0));
+    pub fn add_system_message(&mut self, content: &str) {
+        self.add_message(Role::System, content);
     }
 
-    #[test]
-    fn test_obj_merge() {
-        let base = obj! {
-            a: 10,
-            b: 20
-        };
-
-        let extended = obj! {
-            using base,
-            b: 30,
-            c: 40
-        };
-
-        assert_eq!(extended.get("a").unwrap().as_number(), Some(10.0));
-        assert_eq!(extended.get("b").unwrap().as_number(), Some(30.0));
-        assert_eq!(extended.get("c").unwrap().as_number(), Some(40.0));
+    fn add_message(&mut self, role: Role, content: &str) {
+        self.messages.push(Message::new(role, content.to_string()));
+        if self.messages.len() > self.max_history {
+            self.messages.remove(0);
+        }
     }
 
-    #[test]
-    fn test_obj_set_and_get() {
-        let obj = Obj::new()
-            .set("a", 10)
-            .set("b", "test")
-            .set("c", true);
-
-        assert_eq!(obj.get("a").unwrap().as_number(), Some(10.0));
-        assert_eq!(obj.get("b").unwrap().as_str(), Some("test"));
-        assert_eq!(obj.get("c").unwrap().as_bool(), Some(true));
+    pub fn get_last_user_message(&self) -> Option<&Message> {
+        self.messages.iter().rev().find(|m| m.role == Role::User)
     }
 
-    #[test]
-    fn test_obj_remove() {
-        let obj = obj! { a: 10, b: 20 };
-        let obj = obj.remove("a");
-        assert!(!obj.contains("a"));
-        assert!(obj.contains("b"));
+    pub fn get_last_assistant_message(&self) -> Option<&Message> {
+        self.messages.iter().rev().find(|m| m.role == Role::Assistant)
     }
 
-    #[test]
-    fn test_obj_keys() {
-        let obj = obj! { a: 1, b: 2, c: 3 };
-        let mut keys: Vec<_> = obj.keys().into_iter().map(|s| s.to_string()).collect();
-        keys.sort();
-        assert_eq!(keys, vec!["a", "b", "c"]);
+    pub fn get_history(&self) -> &[Message] {
+        &self.messages
+    }
+
+    pub fn clear(&mut self) {
+        self.messages.clear();
+    }
+
+    pub fn len(&self) -> usize {
+        self.messages.len()
     }
 }
+
+--$FILE===: core/ai/src/lib.rs
+//! SAPRI AI - Motore di ragionamento strutturato
+//! 
+//! Questo modulo implementa l'AI basata su:
+//! - sapri_morph per analisi grammaticale
+//! - sapri_db per conoscenza O(1)
+//! - IRCM per proiezione multidimensionale
+//! - MSAS per rilevamento struttura
+
+// Moduli esistenti (da tenere)
+pub mod conversation;
+
+// Nuovi moduli
+pub mod knowledge;
+pub mod memory;
+pub mod brain;
+pub mod reader;
+pub mod analyzer;
+pub mod reasoner;
+pub mod utils;
+
+// Re-export principali
+pub use brain::Brain;
+pub use knowledge::KnowledgeBase;
+pub use memory::HolographicMemory;
+pub use conversation::Conversation;
